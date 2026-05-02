@@ -56,7 +56,7 @@ You can customize speed thresholds and colors by adding a `tokenSpeed` section t
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `display` | string | `tps` | Display only TPS or full information |
+| `display` | `tps`, `full` | `tps` | Display only TPS or full information |
 | `tpsSlow` | number | `0` | Minimum TPS threshold ("slow") |
 | `tpsMedium` | number | `15` | TPS above this is "medium" |
 | `tpsFast` | number | `30` | TPS above this is "fast" |
