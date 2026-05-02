@@ -1,15 +1,7 @@
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
 
-import {
-  COLOR_BLAZING,
-  COLOR_FAST,
-  COLOR_MEDIUM,
-  COLOR_SLOW,
-  STATUS_KEY,
-  TPS_THRESHOLD_FAST,
-  TPS_THRESHOLD_MEDIUM,
-  TPS_THRESHOLD_SLOW,
-} from "./constants";
+import { getConfig } from "./config";
+import { STATUS_KEY } from "./constants";
 
 /**
  * Applies a custom hex color using 24-bit truecolor ANSI escape codes.
@@ -34,13 +26,14 @@ const colorHex = (text: string, hex: string): string => {
  * @returns The hex color string
  */
 const getColor = (tps: number | null): string => {
+  const config = getConfig();
   if (tps == null) return "";
 
-  if (tps < TPS_THRESHOLD_SLOW) return COLOR_SLOW;
-  if (tps < TPS_THRESHOLD_MEDIUM) return COLOR_MEDIUM;
-  if (tps < TPS_THRESHOLD_FAST) return COLOR_FAST;
+  if (tps < config.tpsSlow) return config.colorSlow;
+  if (tps < config.tpsMedium) return config.colorMedium;
+  if (tps < config.tpsFast) return config.colorFast;
 
-  return COLOR_BLAZING;
+  return config.colorBlazing;
 };
 
 /**
