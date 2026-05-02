@@ -8,6 +8,7 @@
     "pi-extension"
   ],
   "author": "Gabriel Sanhueza",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gsanhueza/pi-token-speed.git"
