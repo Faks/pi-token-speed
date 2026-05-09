@@ -1,10 +1,11 @@
-import { TPS_WINDOW_MS } from "./constants";
+import { COMPACTION_THRESHOLD, TPS_WINDOW_MS } from "./constants";
 
 export class TokenSpeedEngine {
   private _isStreaming = false;
   private _tokenCount = 0;
   private _startTime = 0;
   private _tokenTimestamps: number[] = [];
+  private _windowStartIndex = 0;
 
   /**
    * Whether a streaming session is currently active
@@ -45,19 +46,25 @@ export class TokenSpeedEngine {
 
     const now = Date.now();
     const windowStart = now - TPS_WINDOW_MS;
-    // Remove timestamps older than TPS_WINDOW_MS
+
+    // Advance the window start index
     while (
-      this._tokenTimestamps.length > 0 &&
-      this._tokenTimestamps[0] < windowStart
+      this._windowStartIndex < this._tokenTimestamps.length &&
+      this._tokenTimestamps[this._windowStartIndex] < windowStart
     ) {
-      this._tokenTimestamps.shift();
+      this._windowStartIndex++;
     }
 
+    const windowTokenCount =
+      this._tokenTimestamps.length - this._windowStartIndex;
+    if (windowTokenCount === 0) return this.tps_avg;
+
     // Use the actual time span of tokens in the window for finer precision
-    const windowDuration = (now - this._tokenTimestamps[0]) / 1000;
+    const windowDuration =
+      (now - this._tokenTimestamps[this._windowStartIndex]) / 1000;
     if (windowDuration === 0) return 0;
 
-    return this._tokenTimestamps.length / windowDuration;
+    return windowTokenCount / windowDuration;
   }
 
   /**
@@ -76,6 +83,7 @@ export class TokenSpeedEngine {
     this._isStreaming = true;
     this._startTime = Date.now();
     this._tokenTimestamps = [];
+    this._windowStartIndex = 0;
   }
 
   /**
@@ -83,6 +91,9 @@ export class TokenSpeedEngine {
    */
   stop() {
     this._isStreaming = false;
+    // Release memory — discard accumulated timestamps
+    this._tokenTimestamps = [];
+    this._windowStartIndex = 0;
   }
 
   /**
@@ -93,5 +104,19 @@ export class TokenSpeedEngine {
 
     this._tokenCount++;
     this._tokenTimestamps.push(Date.now());
+
+    // Compact periodically to prevent unbounded growth during long streams
+    if (this._windowStartIndex >= COMPACTION_THRESHOLD) {
+      this._compact();
+    }
+  }
+
+  /**
+   * Removes the dead prefix of the timestamp array to free memory.
+   */
+  private _compact() {
+    if (this._windowStartIndex === 0) return;
+    this._tokenTimestamps = this._tokenTimestamps.slice(this._windowStartIndex);
+    this._windowStartIndex = 0;
   }
 }

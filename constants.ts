@@ -4,6 +4,11 @@
 export const STATUS_KEY = "tokenSpeed";
 
 /**
+ * Maximum number of dead timestamp entries before compacting the array.
+ */
+export const COMPACTION_THRESHOLD = 5000;
+
+/**
  * Sliding window duration in milliseconds for time-based TPS calculation
  */
 export const TPS_WINDOW_MS = 1000;
