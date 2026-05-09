@@ -52,7 +52,7 @@ export const renderStatus = (
   tokenCount: number = 0,
   elapsedSeconds: number = 0,
 ): void => {
-  const config = getConfig();
+  const config = getConfig((msg) => ctx.ui.notify(msg, "warning"));
   const theme = ctx.ui.theme;
   const value = tps?.toFixed(1);
 
