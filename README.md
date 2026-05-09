@@ -76,6 +76,6 @@ You can customize speed thresholds and colors by adding a `tokenSpeed` section t
 
 ## Dependencies
 
-| Dependency                      | Purpose                               |
-| ------------------------------- | ------------------------------------- |
-| `@mariozechner/pi-coding-agent` | Pi Coding Agent SDK (peer dependency) |
+| Dependency                        | Purpose                               |
+| --------------------------------- | ------------------------------------- |
+| `@earendil-works/pi-coding-agent` | Pi Coding Agent SDK (peer dependency) |
