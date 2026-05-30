@@ -4,6 +4,7 @@ export class TokenSpeedEngine {
   private _isStreaming = false;
   private _tokenCount = 0;
   private _startTime = 0;
+  private _endTime = 0;
   private _tokenTimestamps: number[] = [];
   private _windowStartIndex = 0;
 
@@ -26,7 +27,9 @@ export class TokenSpeedEngine {
    */
   get elapsedMs(): number {
     if (this._startTime === 0) return 0;
-    return Date.now() - this._startTime;
+    if (this.isStreaming) return Date.now() - this._startTime;
+
+    return this._endTime - this._startTime;
   }
 
   /**
@@ -44,8 +47,11 @@ export class TokenSpeedEngine {
     // While the window is still filling, use the average instead
     if (this.elapsedMs < TPS_WINDOW_MS) return this.tps_avg;
 
-    const now = Date.now();
-    const windowStart = now - TPS_WINDOW_MS;
+    // While we're stopped, return our last calculation
+    if (!this.isStreaming) return this.tps_avg;
+
+    this._endTime = Date.now();
+    const windowStart = this._endTime - TPS_WINDOW_MS;
 
     // Advance the window start index
     while (
@@ -61,7 +67,7 @@ export class TokenSpeedEngine {
 
     // Use the actual time span of tokens in the window for finer precision
     const windowDuration =
-      (now - this._tokenTimestamps[this._windowStartIndex]) / 1000;
+      (this._endTime - this._tokenTimestamps[this._windowStartIndex]) / 1000;
     if (windowDuration === 0) return 0;
 
     return windowTokenCount / windowDuration;
@@ -70,7 +76,7 @@ export class TokenSpeedEngine {
   /**
    * Returns average tokens-per-second
    */
-  get tps_avg(): number {
+  private get tps_avg(): number {
     if (this.elapsedSeconds === 0) return 0;
     return this.tokenCount / this.elapsedSeconds;
   }
@@ -82,6 +88,7 @@ export class TokenSpeedEngine {
     this._tokenCount = 0;
     this._isStreaming = true;
     this._startTime = Date.now();
+    this._endTime = Date.now();
     this._tokenTimestamps = [];
     this._windowStartIndex = 0;
   }

@@ -2,6 +2,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 import { getConfig } from "./config";
 import { STATUS_KEY } from "./constants";
+import { TokenSpeedEngine } from "./engine";
 import { type TokenSpeedConfig } from "./interfaces";
 import { isValidHex } from "./validation";
 
@@ -44,21 +45,22 @@ const getColor = (config: TokenSpeedConfig, tps: number | null): string => {
  * Renders the current TPS value with appropriate color.
  *
  * @param ctx The extension context
- * @param tps The TPS value to render
- * @param tokenCount The number of tokens processed
- * @param elapsedSeconds Elapsed seconds since stream start
+ * @param engine The TokenSpeedEngine instance
  */
 export const renderStatus = (
   ctx: ExtensionContext,
-  tps: number | null = null,
-  tokenCount: number = 0,
-  elapsedSeconds: number = 0,
+  engine: TokenSpeedEngine,
+  firstRun: boolean = false,
 ): void => {
+  const { tps, tokenCount, elapsedSeconds } = engine;
+
   const { config } = getConfig();
   const theme = ctx.ui.theme;
   const value = tps?.toFixed(1);
 
   const label = theme.fg("dim", "⚡ TPS:");
+  if (firstRun) return ctx.ui.setStatus(STATUS_KEY, `${label} --`);
+
   const measurement = value ? `${value} tok/s` : "--";
 
   const color = getColor(config, tps);

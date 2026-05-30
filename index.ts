@@ -1,5 +1,6 @@
 import type {
   ExtensionAPI,
+  ExtensionCommandContext,
   ExtensionContext,
   ExtensionUIContext,
 } from "@earendil-works/pi-coding-agent";
@@ -28,12 +29,13 @@ export default (pi: ExtensionAPI) => {
 
   pi.registerCommand("tps", {
     description: "Toggle display mode between 'tps' and 'full'",
-    handler: tpsCommand,
+    handler: (_: string, ctx: ExtensionCommandContext) =>
+      tpsCommand(ctx, engine),
   });
 
   pi.on("session_start", async (_, ctx: ExtensionContext) => {
     initialize(ctx.ui);
-    renderStatus(ctx);
+    renderStatus(ctx, engine, true);
   });
 
   pi.on("message_start", async (event) => {
@@ -46,7 +48,7 @@ export default (pi: ExtensionAPI) => {
     const ev = event.assistantMessageEvent;
     if (ev.type === "text_delta" || ev.type === "thinking_delta") {
       engine.recordToken();
-      renderStatus(ctx, engine.tps, engine.tokenCount, engine.elapsedSeconds);
+      renderStatus(ctx, engine);
     }
   });
 
@@ -54,7 +56,7 @@ export default (pi: ExtensionAPI) => {
     if (event.message?.role !== "assistant" || !engine.isStreaming) return;
     engine.stop();
 
-    renderStatus(ctx, engine.tps_avg, engine.tokenCount, engine.elapsedSeconds);
+    renderStatus(ctx, engine);
   });
 
   pi.on("turn_end", async () => {
