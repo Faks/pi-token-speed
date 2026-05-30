@@ -4,6 +4,7 @@ import type {
   ExtensionUIContext,
 } from "@earendil-works/pi-coding-agent";
 
+import { tpsCommand } from "./commands";
 import { getConfig } from "./config";
 import { TokenSpeedEngine } from "./engine";
 import { renderStatus } from "./ui";
@@ -24,6 +25,11 @@ export function initialize(uiHandler: ExtensionUIContext): void {
 
 export default (pi: ExtensionAPI) => {
   const engine = new TokenSpeedEngine();
+
+  pi.registerCommand("tps", {
+    description: "Toggle display mode between 'tps' and 'full'",
+    handler: tpsCommand,
+  });
 
   pi.on("session_start", async (_, ctx: ExtensionContext) => {
     initialize(ctx.ui);

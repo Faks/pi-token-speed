@@ -1,18 +1,15 @@
-import { getAgentDir } from "@earendil-works/pi-coding-agent";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   COLOR_BLAZING,
   COLOR_FAST,
   COLOR_MEDIUM,
   COLOR_SLOW,
-  STATUS_KEY,
   TPS_THRESHOLD_BLAZING,
   TPS_THRESHOLD_FAST,
   TPS_THRESHOLD_MEDIUM,
   TPS_THRESHOLD_SLOW,
 } from "./constants";
 import { TokenSpeedConfig } from "./interfaces";
+import { readUserSettings, writeUserSettings } from "./settings";
 import { isValidColorDefinition, isValidThresholdOrder } from "./validation";
 
 /**
@@ -22,33 +19,7 @@ let userSettings: TokenSpeedConfig | null = null;
 let config: TokenSpeedConfig | null = null;
 
 /**
- * Reads ~/.pi/agent/settings.json and extracts the "tokenSpeed" settings block.
- *
- * @returns A partial TokenSpeedConfig with values from the user's settings file,
- *          or an empty TokenSpeedConfig if the file or key is missing.
- */
-const readUserSettings = (): TokenSpeedConfig => {
-  const emptyResponse = {} as TokenSpeedConfig;
-
-  try {
-    const settingsPath = join(getAgentDir(), "settings.json");
-    const raw = readFileSync(settingsPath, "utf-8");
-    const settings = JSON.parse(raw) as Record<string, unknown>;
-    const response = settings[STATUS_KEY] as TokenSpeedConfig | undefined;
-
-    if (!response) return emptyResponse;
-
-    return response;
-  } catch {
-    // File doesn't exist, invalid JSON, or permission error
-    return emptyResponse;
-  }
-};
-
-/**
  * Retrieves the default configuration object.
- *
- * @returns Default configuration object
  */
 const getDefaultConfig = (): TokenSpeedConfig => {
   return {
@@ -105,4 +76,20 @@ export const getConfig = (): {
 
   config = { ...merged };
   return { config, errors };
+};
+
+/**
+ * Writes a partial TokenSpeedConfig, invalidating the cache.
+ */
+export const setConfig = (partial: Partial<TokenSpeedConfig>): void => {
+  writeUserSettings(partial);
+  resetConfigCache();
+};
+
+/**
+ * Resets the cached config, forcing a fresh read from disk on the next call.
+ */
+export const resetConfigCache = (): void => {
+  config = null;
+  userSettings = null;
 };
