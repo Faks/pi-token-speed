@@ -50,8 +50,8 @@ export class TokenSpeedEngine {
     // While we're stopped, return our last calculation
     if (!this.isStreaming) return this.tps_avg;
 
-    this._endTime = Date.now();
-    const windowStart = this._endTime - TPS_WINDOW_MS;
+    const now = Date.now();
+    const windowStart = now - TPS_WINDOW_MS;
 
     // Advance the window start index
     while (
@@ -67,7 +67,7 @@ export class TokenSpeedEngine {
 
     // Use the actual time span of tokens in the window for finer precision
     const windowDuration =
-      (this._endTime - this._tokenTimestamps[this._windowStartIndex]) / 1000;
+      (now - this._tokenTimestamps[this._windowStartIndex]) / 1000;
     if (windowDuration === 0) return 0;
 
     return windowTokenCount / windowDuration;
@@ -98,6 +98,7 @@ export class TokenSpeedEngine {
    */
   stop() {
     this._isStreaming = false;
+    this._endTime = Date.now();
     // Release memory — discard accumulated timestamps
     this._tokenTimestamps = [];
     this._windowStartIndex = 0;
