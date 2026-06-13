@@ -47,13 +47,16 @@ export default (pi: ExtensionAPI) => {
   pi.on("message_update", async (event, ctx: ExtensionContext) => {
     const ev = event.assistantMessageEvent;
     if (ev.type === "text_delta" || ev.type === "thinking_delta") {
-      engine.recordToken();
+      engine.recordDelta(ev.delta, ev.partial?.usage?.output);
       renderStatus(ctx, engine);
     }
   });
 
   pi.on("message_end", async (event, ctx: ExtensionContext) => {
     if (event.message?.role !== "assistant" || !engine.isStreaming) return;
+
+    // Snap the total to the authoritative usage so the final average is exact.
+    engine.reconcileTotal(event.message?.usage?.output ?? 0);
     engine.stop();
 
     renderStatus(ctx, engine);
