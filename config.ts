@@ -3,6 +3,7 @@ import {
   COLOR_FAST,
   COLOR_MEDIUM,
   COLOR_SLOW,
+  SLIDING_WINDOW,
   TPS_THRESHOLD_BLAZING,
   TPS_THRESHOLD_FAST,
   TPS_THRESHOLD_MEDIUM,
@@ -10,7 +11,11 @@ import {
 } from "./constants";
 import { TokenSpeedConfig } from "./interfaces";
 import { readUserSettings, writeUserSettings } from "./settings";
-import { isValidColorDefinition, isValidThresholdOrder } from "./validation";
+import {
+  isValidColorDefinition,
+  isValidSlidingWindow,
+  isValidThresholdOrder,
+} from "./validation";
 
 /**
  * Cached settings
@@ -23,6 +28,8 @@ let config: TokenSpeedConfig | null = null;
  */
 const getDefaultConfig = (): TokenSpeedConfig => {
   return {
+    display: "tps",
+    slidingWindow: SLIDING_WINDOW,
     tpsSlow: TPS_THRESHOLD_SLOW,
     tpsMedium: TPS_THRESHOLD_MEDIUM,
     tpsFast: TPS_THRESHOLD_FAST,
@@ -31,7 +38,6 @@ const getDefaultConfig = (): TokenSpeedConfig => {
     colorMedium: COLOR_MEDIUM,
     colorFast: COLOR_FAST,
     colorBlazing: COLOR_BLAZING,
-    display: "tps",
   };
 };
 
@@ -51,6 +57,16 @@ export const getConfig = (): {
 
   const merged = { ...defaultSettings, ...userSettings };
 
+  // Validate display (default to tps)
+  if (!["tps", "full"].includes(merged.display)) {
+    merged.display = "tps";
+  }
+
+  // Validate sliding window time
+  if (!isValidSlidingWindow(merged)) {
+    merged.slidingWindow = SLIDING_WINDOW;
+  }
+
   // Validate thresholds
   if (!isValidThresholdOrder(merged)) {
     errors.push("");
@@ -67,11 +83,6 @@ export const getConfig = (): {
       "[pi-token-speed] Colors must be valid 24-bit truecolor ANSI hex strings (e.g., '#00ff88').",
       `Found: ${merged.colorSlow} | ${merged.colorMedium} | ${merged.colorFast} | ${merged.colorBlazing}.`,
     );
-  }
-
-  // Validate display
-  if (!["tps", "full"].includes(merged.display)) {
-    merged.display = "tps";
   }
 
   config = { ...merged };

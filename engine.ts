@@ -1,4 +1,5 @@
-import { COMPACTION_THRESHOLD, TPS_WINDOW_MS } from "./constants";
+import { getConfig } from "./config";
+import { COMPACTION_THRESHOLD, SLIDING_WINDOW } from "./constants";
 
 export class TokenSpeedEngine {
   private _isStreaming = false;
@@ -7,6 +8,12 @@ export class TokenSpeedEngine {
   private _endTime = 0;
   private _tokenTimestamps: number[] = [];
   private _windowStartIndex = 0;
+  private _slidingWindow = SLIDING_WINDOW;
+
+  constructor() {
+    const { config } = getConfig();
+    this._slidingWindow = config.slidingWindow;
+  }
 
   /**
    * Whether a streaming session is currently active
@@ -41,17 +48,17 @@ export class TokenSpeedEngine {
 
   /**
    * Returns tokens-per-second based on a time-based sliding window.
-   * Uses the actual span of timestamps in the window for sub-second granularity
+   * Falls back to the overall average during the first window period.
    */
   get tps(): number {
     // While the window is still filling, use the average instead
-    if (this.elapsedMs < TPS_WINDOW_MS) return this.tps_avg;
+    if (this.elapsedMs < this._slidingWindow) return this.tps_avg;
 
     // While we're stopped, return our last calculation
     if (!this.isStreaming) return this.tps_avg;
 
     const now = Date.now();
-    const windowStart = now - TPS_WINDOW_MS;
+    const windowStart = now - this._slidingWindow;
 
     // Advance the window start index
     while (
@@ -68,7 +75,7 @@ export class TokenSpeedEngine {
     // Use the actual time span of tokens in the window for finer precision
     const windowDuration =
       (now - this._tokenTimestamps[this._windowStartIndex]) / 1000;
-    if (windowDuration === 0) return 0;
+    if (windowDuration === 0) return this.tps_avg;
 
     return windowTokenCount / windowDuration;
   }

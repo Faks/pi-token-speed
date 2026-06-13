@@ -12,4 +12,5 @@ export interface TokenSpeedConfig {
   colorFast: string;
   colorBlazing: string;
   display: "tps" | "full";
+  slidingWindow: number;
 }

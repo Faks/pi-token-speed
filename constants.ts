@@ -9,9 +9,9 @@ export const STATUS_KEY = "tokenSpeed";
 export const COMPACTION_THRESHOLD = 5000;
 
 /**
- * Sliding window duration in milliseconds for time-based TPS calculation
+ * Sliding window duration (ms) for time-based TPS calculation
  */
-export const TPS_WINDOW_MS = 1000;
+export const SLIDING_WINDOW = 1000;
 
 /**
  * TPS threshold above which speed is considered slow

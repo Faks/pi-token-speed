@@ -3,12 +3,29 @@ import {
   COLOR_FAST,
   COLOR_MEDIUM,
   COLOR_SLOW,
+  SLIDING_WINDOW,
   TPS_THRESHOLD_BLAZING,
   TPS_THRESHOLD_FAST,
   TPS_THRESHOLD_MEDIUM,
   TPS_THRESHOLD_SLOW,
 } from "./constants";
 import { type TokenSpeedConfig } from "./interfaces";
+
+/**
+ * Validates that sliding window is a reasonable number
+ *
+ * @param config The configuration object containing the window value.
+ * @returns True if it's a number representing a window between 0.1 and 30.0 seconds
+ */
+export const isValidSlidingWindow = (config: TokenSpeedConfig): boolean => {
+  const { slidingWindow = SLIDING_WINDOW } = config;
+
+  return (
+    typeof slidingWindow === "number" &&
+    slidingWindow >= 100 &&
+    slidingWindow <= 30000
+  );
+};
 
 /**
  * Validates that TPS thresholds are in strict ascending order:
