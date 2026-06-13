@@ -35,21 +35,21 @@ export const TPS_THRESHOLD_FAST = 30;
 export const TPS_THRESHOLD_BLAZING = 45;
 
 /**
- * Color used when TPS is above the slow threshold
+ * Color used when TPS is at or above the slow threshold but below medium
  */
 export const COLOR_SLOW = "#ff4444";
 
 /**
- * Color used when TPS is between slow and medium thresholds
+ * Color used when TPS is at or above the medium threshold but below fast
  */
 export const COLOR_MEDIUM = "#ffaa00";
 
 /**
- * Color used when TPS is between medium and fast thresholds
+ * Color used when TPS is at or above the fast threshold but below blazing
  */
 export const COLOR_FAST = "#00ff88";
 
 /**
- * Color used when TPS exceeds the fast threshold
+ * Color used when TPS is at or above the blazing threshold
  */
 export const COLOR_BLAZING = "#44ddff";
