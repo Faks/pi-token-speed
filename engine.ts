@@ -11,12 +11,14 @@ export class TokenSpeedEngine {
   private _countedUsageOutput = 0;
 
   private _slidingWindow: number;
+  private _useProviderTokens: boolean;
   private _countStrategy: "estimate" | "direct";
 
   constructor() {
     const { config } = getConfig();
     this._slidingWindow = config.slidingWindow;
     this._countStrategy = config.countStrategy;
+    this._useProviderTokens = config.useProviderTokens;
   }
 
   /**
@@ -30,7 +32,11 @@ export class TokenSpeedEngine {
   recordDelta(delta: string, usageOutput?: number): void {
     if (!this._isStreaming) return;
 
-    if (usageOutput !== undefined && usageOutput > this._countedUsageOutput) {
+    if (
+      this._useProviderTokens &&
+      usageOutput !== undefined &&
+      usageOutput > this._countedUsageOutput
+    ) {
       this.recordTokens(usageOutput - this._countedUsageOutput);
       this._countedUsageOutput = usageOutput;
     } else {

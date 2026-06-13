@@ -3,6 +3,7 @@
  * All fields can be overridden via ~/.pi/agent/settings.json under the "tokenSpeed" key.
  */
 export interface TokenSpeedConfig {
+  display: "tps" | "full";
   tpsSlow: number;
   tpsMedium: number;
   tpsFast: number;
@@ -11,7 +12,7 @@ export interface TokenSpeedConfig {
   colorMedium: string;
   colorFast: string;
   colorBlazing: string;
-  display: "tps" | "full";
   slidingWindow: number;
+  useProviderTokens: boolean;
   countStrategy: "estimate" | "direct";
 }

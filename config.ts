@@ -30,8 +30,6 @@ let config: TokenSpeedConfig | null = null;
 const getDefaultConfig = (): TokenSpeedConfig => {
   return {
     display: "tps",
-    countStrategy: "direct",
-    slidingWindow: SLIDING_WINDOW,
     tpsSlow: TPS_THRESHOLD_SLOW,
     tpsMedium: TPS_THRESHOLD_MEDIUM,
     tpsFast: TPS_THRESHOLD_FAST,
@@ -40,6 +38,9 @@ const getDefaultConfig = (): TokenSpeedConfig => {
     colorMedium: COLOR_MEDIUM,
     colorFast: COLOR_FAST,
     colorBlazing: COLOR_BLAZING,
+    slidingWindow: SLIDING_WINDOW,
+    useProviderTokens: false,
+    countStrategy: "direct",
   };
 };
 
@@ -67,6 +68,11 @@ export const getConfig = (): {
   // Validate count strategy
   if (!isValidCountStrategy(merged)) {
     merged.countStrategy = "direct";
+  }
+
+  // Validate useProviderTokens
+  if (typeof merged.useProviderTokens !== "boolean") {
+    merged.useProviderTokens = false;
   }
 
   // Validate sliding window time
