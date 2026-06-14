@@ -1,4 +1,4 @@
-import type { CountStrategy, DisplayMode } from "./types";
+import type { CountStrategy, DisplayMode } from "./config-types";
 
 /**
  * Identifier for the status bar entry

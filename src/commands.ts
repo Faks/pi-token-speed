@@ -1,6 +1,7 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { getSettingsListTheme } from "@earendil-works/pi-coding-agent";
 import { SettingsList, type SettingItem } from "@earendil-works/pi-tui";
+import type { CountStrategy, DisplayMode } from "./config-types";
 import {
   COUNT_STRATEGY_LABELS,
   DISPLAY_LABELS,
@@ -8,7 +9,6 @@ import {
 } from "./options";
 import type { Renderer } from "./renderer";
 import { settings } from "./settings";
-import type { CountStrategy, DisplayMode } from "./types";
 
 /**
  * Handles commands for the token-speed extension.

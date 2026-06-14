@@ -1,3 +1,4 @@
+import { type TokenSpeedConfig } from "./config-types";
 import {
   COLOR_BLAZING,
   COLOR_FAST,
@@ -11,7 +12,6 @@ import {
   TPS_THRESHOLD_MEDIUM,
   TPS_THRESHOLD_SLOW,
 } from "./constants";
-import { type TokenSpeedConfig } from "./interfaces";
 import { COUNT_STRATEGY_LABELS, DISPLAY_LABELS } from "./options";
 
 /**

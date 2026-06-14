@@ -1,6 +1,7 @@
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { join } from "node:path";
 
+import { TokenSpeedConfig } from "./config-types";
 import {
   COLOR_BLAZING,
   COLOR_FAST,
@@ -16,7 +17,6 @@ import {
   TPS_THRESHOLD_SLOW,
   USE_PROVIDER_TOKENS,
 } from "./constants";
-import { TokenSpeedConfig } from "./interfaces";
 import { IO } from "./io";
 import { Validator } from "./validation";
 

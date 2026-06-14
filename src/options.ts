@@ -1,4 +1,4 @@
-import type { CountStrategy, DisplayMode } from "./types";
+import type { CountStrategy, DisplayMode } from "./config-types";
 
 /**
  * Human-readable labels for display mode values.

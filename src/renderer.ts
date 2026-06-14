@@ -1,7 +1,7 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { type TokenSpeedConfig } from "./config-types";
 import { STATUS_KEY } from "./constants";
 import { TokenSpeedEngine } from "./engine";
-import { type TokenSpeedConfig } from "./interfaces";
 import { settings } from "./settings";
 import { Validator } from "./validation";
 
