@@ -1,5 +1,5 @@
-import { COMPACTION_THRESHOLD } from "./constants";
 import { settings } from "./settings";
+import { SlidingWindow } from "./sliding-window";
 
 export class TokenSpeedEngine {
   private _isStreaming = false;
@@ -8,11 +8,10 @@ export class TokenSpeedEngine {
   private _endTime = 0;
   private _ttftStart = 0;
   private _ttftEnd = 0;
-  private _events: { time: number; tokens: number }[] = [];
-  private _windowStartIndex = 0;
   private _countedUsageOutput = 0;
 
-  private _slidingWindow!: number;
+  private _slidingWindow!: SlidingWindow;
+  private _windowMs!: number;
   private _useProviderTokens!: boolean;
   private _countStrategy!: "estimate" | "direct";
 
@@ -21,7 +20,8 @@ export class TokenSpeedEngine {
    */
   async initialize(): Promise<void> {
     const { config } = await settings.getConfig();
-    this._slidingWindow = config.slidingWindow;
+    this._windowMs = config.slidingWindow;
+    this._slidingWindow = new SlidingWindow(config.slidingWindow);
     this._countStrategy = config.countStrategy;
     this._useProviderTokens = config.useProviderTokens;
   }
@@ -85,9 +85,7 @@ export class TokenSpeedEngine {
     return this._endTime - this._startTime;
   }
 
-  /**
-   * Returns elapsed seconds since stream start (0 if not started)
-   */
+  /** Returns elapsed seconds since stream start (0 if not started). */
   get elapsedSeconds(): number {
     return this.elapsedMs / 1000;
   }
@@ -98,37 +96,12 @@ export class TokenSpeedEngine {
    */
   get tps(): number {
     // While the window is still filling, use the average instead
-    if (this.elapsedMs < this._slidingWindow) return this.tps_avg;
+    if (this.elapsedMs < this._windowMs) return this.tps_avg;
 
     // While we're stopped, return our last calculation
     if (!this.isStreaming) return this.tps_avg;
 
-    const now = Date.now();
-    const windowStart = now - this._slidingWindow;
-
-    // Advance the window start index past events older than the window
-    while (
-      this._windowStartIndex < this._events.length &&
-      this._events[this._windowStartIndex].time < windowStart
-    ) {
-      this._windowStartIndex++;
-    }
-
-    if (this._windowStartIndex >= this._events.length) return this.tps_avg;
-
-    // Sum the tokens (not the events) that fall inside the window
-    let windowTokenCount = 0;
-    for (let i = this._windowStartIndex; i < this._events.length; i++) {
-      windowTokenCount += this._events[i].tokens;
-    }
-    if (windowTokenCount === 0) return this.tps_avg;
-
-    // Use the actual time span of tokens in the window for finer precision
-    const windowDuration =
-      (now - this._events[this._windowStartIndex].time) / 1000;
-    if (windowDuration === 0) return 0;
-
-    return windowTokenCount / windowDuration;
+    return this._slidingWindow.getTps(Date.now());
   }
 
   /**
@@ -154,8 +127,7 @@ export class TokenSpeedEngine {
     this._isStreaming = true;
     this._startTime = Date.now();
     this._endTime = Date.now();
-    this._events = [];
-    this._windowStartIndex = 0;
+    this._slidingWindow.reset();
     this._countedUsageOutput = 0;
   }
 
@@ -188,36 +160,15 @@ export class TokenSpeedEngine {
   stop() {
     this._isStreaming = false;
     this._endTime = Date.now();
-    // Release memory — discard accumulated events
-    this._events = [];
-    this._windowStartIndex = 0;
+    this._slidingWindow.reset();
   }
 
-  /**
-   * Records a batch of tokens. Each call pushes a timestamped event for
-   * the sliding-window TPS calculation.
-   *
-   * @param tokens The number of tokens to record.
-   */
-  recordTokens(tokens: number) {
+  /** Records a batch of tokens, pushing a timestamped event for TPS calculation. */
+  private recordTokens(tokens: number) {
     if (!this._isStreaming || tokens <= 0) return;
 
     this._tokenCount += tokens;
-    this._events.push({ time: Date.now(), tokens });
-
-    // Compact periodically to prevent unbounded growth during long streams
-    if (this._windowStartIndex >= COMPACTION_THRESHOLD) {
-      this._compact();
-    }
-  }
-
-  /**
-   * Removes the dead prefix of the events array to free memory.
-   */
-  private _compact() {
-    if (this._windowStartIndex === 0) return;
-    this._events = this._events.slice(this._windowStartIndex);
-    this._windowStartIndex = 0;
+    this._slidingWindow.record(tokens);
   }
 
   /**
