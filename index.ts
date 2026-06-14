@@ -11,8 +11,7 @@ import { TokenSpeedEngine } from "./engine";
 import { renderStatus } from "./ui";
 
 /**
- * Setup and validation utilities for the token-speed extension.
- * Handles one-time initialization during session start.
+ * One-time initialization that validates config and warns on errors.
  *
  * @param uiHandler The Pi UI handler for displaying notifications and status updates.
  */
@@ -28,7 +27,8 @@ export default (pi: ExtensionAPI) => {
   const engine = new TokenSpeedEngine();
 
   pi.registerCommand("tps", {
-    description: "Cycle through display modes: tps → ttft → stats → full",
+    description:
+      "Open settings menu to configure display mode, token counting strategy, and provider token usage",
     handler: (_: string, ctx: ExtensionCommandContext) =>
       tpsCommand(ctx, engine),
   });
