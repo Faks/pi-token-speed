@@ -8,10 +8,10 @@ export class TokenSpeedEngine {
   private _endTime = 0;
   private _ttftStart = 0;
   private _ttftEnd = 0;
+  private _finalTps = 0;
   private _countedUsageOutput = 0;
 
   private _slidingWindow!: SlidingWindow;
-  private _windowMs!: number;
   private _useProviderTokens!: boolean;
   private _countStrategy!: "estimate" | "direct";
 
@@ -20,7 +20,6 @@ export class TokenSpeedEngine {
    */
   async initialize(): Promise<void> {
     const { config } = await settings.getConfig();
-    this._windowMs = config.slidingWindow;
     this._slidingWindow = new SlidingWindow(config.slidingWindow);
     this._countStrategy = config.countStrategy;
     this._useProviderTokens = config.useProviderTokens;
@@ -100,24 +99,14 @@ export class TokenSpeedEngine {
 
   /**
    * Returns tokens-per-second based on a time-based sliding window.
-   * Falls back to the overall average during the first window period.
+   * When streaming has finished, returns the last measurement.
    */
   get tps(): number {
-    // While the window is still filling, use the average instead
-    if (this.elapsedMs < this._windowMs) return this.tps_avg;
+    if (this.isStreaming) {
+      this._finalTps = this._slidingWindow.getTps(Date.now());
+    }
 
-    // While we're stopped, return our last calculation
-    if (!this.isStreaming) return this.tps_avg;
-
-    return this._slidingWindow.getTps(Date.now());
-  }
-
-  /**
-   * Returns average tokens-per-second
-   */
-  private get tps_avg(): number {
-    if (this.elapsedSeconds === 0) return 0;
-    return this.tokenCount / this.elapsedSeconds;
+    return this._finalTps;
   }
 
   /**
@@ -137,6 +126,7 @@ export class TokenSpeedEngine {
     this._endTime = Date.now();
     this._slidingWindow.reset();
     this._countedUsageOutput = 0;
+    this._finalTps = 0;
   }
 
   /**

@@ -1,4 +1,4 @@
-import { COMPACTION_THRESHOLD } from "./constants";
+import { COMPACTION_THRESHOLD, MIN_SLIDING_WINDOW } from "./constants";
 
 /**
  * Time-based sliding window for calculating tokens-per-second.
@@ -30,8 +30,9 @@ export class SlidingWindow {
   /**
    * Calculates tokens-per-second within the sliding window.
    *
-   * Uses the actual time span of tokens in the window for finer precision
-   * rather than the full window duration. Returns 0 if no tokens are in the window.
+   * Divides tokens in the window by the actual time span (clamped to a
+   * minimum of `MIN_SLIDING_WINDOW` to avoid burst spikes).
+   * Returns 0 if no tokens are in the window.
    *
    * @param now Current timestamp in milliseconds.
    * @returns Tokens per second, or 0 if the window is empty.
@@ -59,12 +60,10 @@ export class SlidingWindow {
 
     if (windowTokenCount === 0) return 0;
 
-    // Use actual time span of tokens for finer precision
-    const windowDuration =
-      (now - this.events[this.windowStartIndex].time) / 1000;
-    if (windowDuration === 0) return 0;
-
-    return windowTokenCount / windowDuration;
+    // Use the actual span but clamp to a minimum to avoid burst spikes.
+    const rawSpan = now - this.events[this.windowStartIndex].time;
+    const span = Math.max(rawSpan, MIN_SLIDING_WINDOW);
+    return (1000 * windowTokenCount) / span;
   }
 
   /**
