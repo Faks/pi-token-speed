@@ -1,6 +1,7 @@
 import type {
   CountStrategy,
   DisplayMode,
+  EndTpsBehavior,
   TokenSpeedConfig,
 } from "./config-types";
 import { MAX_SLIDING_WINDOW, MIN_SLIDING_WINDOW } from "./constants";
@@ -11,6 +12,7 @@ import {
   COLOR_SLOW,
   COUNT_STRATEGY,
   DISPLAY_MODE,
+  END_TPS_BEHAVIOR,
   SLIDING_WINDOW,
   TPS_THRESHOLD_BLAZING,
   TPS_THRESHOLD_FAST,
@@ -18,7 +20,11 @@ import {
   TPS_THRESHOLD_SLOW,
   USE_PROVIDER_TOKENS,
 } from "./defaults";
-import { COUNT_STRATEGY_LABELS, DISPLAY_LABELS } from "./options";
+import {
+  COUNT_STRATEGY_LABELS,
+  DISPLAY_LABELS,
+  END_TPS_BEHAVIOR_LABELS,
+} from "./options";
 
 /**
  * Static utility class for TokenSpeed configuration validation.
@@ -49,6 +55,10 @@ export class Validator {
     );
     response.slidingWindow = this.checkSlidingWindow(
       config.slidingWindow,
+      errors,
+    );
+    response.endTpsBehavior = this.checkEndTpsBehavior(
+      config.endTpsBehavior,
       errors,
     );
 
@@ -223,5 +233,26 @@ export class Validator {
     );
 
     return SLIDING_WINDOW;
+  }
+
+  /**
+   * Checks that endTpsBehavior is a recognized value, defaulting if invalid.
+   *
+   * @param value The endTpsBehavior value to check.
+   * @param errors The shared errors array to push to if invalid.
+   * @returns The validated (or defaulted) end TPS behavior.
+   */
+  private static checkEndTpsBehavior(
+    value: unknown,
+    errors: string[],
+  ): EndTpsBehavior {
+    if (Object.keys(END_TPS_BEHAVIOR_LABELS).includes(value as string))
+      return value as EndTpsBehavior;
+
+    errors.push(
+      `- Invalid endTpsBehavior "${value}" — defaulting to "${END_TPS_BEHAVIOR}".`,
+    );
+
+    return END_TPS_BEHAVIOR;
   }
 }

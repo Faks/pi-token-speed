@@ -4,21 +4,37 @@ import { SettingsList, type SettingItem } from "@earendil-works/pi-tui";
 import type {
   CountStrategy,
   DisplayMode,
+  EndTpsBehavior,
   TokenSpeedConfig,
 } from "./config-types";
+import { TokenSpeedEngine } from "./engine";
 import {
   COUNT_STRATEGY_LABELS,
   DISPLAY_LABELS,
+  END_TPS_BEHAVIOR_LABELS,
   TOGGLE_LABELS,
 } from "./options";
 import type { Renderer } from "./renderer";
 import { settings } from "./settings";
 
 /**
+ * Configuration options
+ */
+enum Options {
+  DISPLAY = "display",
+  USE_PROVIDER_TOKENS = "useProviderTokens",
+  COUNT_STRATEGY = "countStrategy",
+  END_TPS_BEHAVIOR = "endTpsBehavior",
+}
+
+/**
  * Handles commands for the token-speed extension.
  */
 export class CommandManager {
-  constructor(private readonly renderer: Renderer) {}
+  constructor(
+    private readonly renderer: Renderer,
+    private readonly engine: TokenSpeedEngine,
+  ) {}
 
   /**
    * Handles the `/tps` command — opens a SettingsList to configure
@@ -37,9 +53,6 @@ export class CommandManager {
         done,
       ),
     );
-
-    // Re-render with the latest config
-    this.renderer.update(ctx);
   }
 
   /**
@@ -54,15 +67,22 @@ export class CommandManager {
     newValue: string,
     ctx: ExtensionCommandContext,
   ): Promise<void> {
-    if (id === "display") {
+    if (id === Options.DISPLAY) {
       await settings.setConfig({ display: newValue as DisplayMode });
-    } else if (id === "useProviderTokens") {
+    } else if (id === Options.USE_PROVIDER_TOKENS) {
       await settings.setConfig({ useProviderTokens: newValue === "on" });
-    } else if (id === "countStrategy") {
+    } else if (id === Options.COUNT_STRATEGY) {
       await settings.setConfig({
         countStrategy: newValue as CountStrategy,
       });
+    } else if (id === Options.END_TPS_BEHAVIOR) {
+      await settings.setConfig({
+        endTpsBehavior: newValue as EndTpsBehavior,
+      });
     }
+
+    // Re-render with the latest config
+    this.engine.initialize();
     this.renderer.update(ctx);
   }
 
@@ -97,14 +117,14 @@ export class CommandManager {
   private buildSettingsItems(config: TokenSpeedConfig): SettingItem[] {
     return [
       {
-        id: "display",
+        id: Options.DISPLAY,
         label: "Display mode",
         description: "Level of detail to show in the status bar",
         currentValue: config.display,
         values: Object.keys(DISPLAY_LABELS) as DisplayMode[],
       },
       {
-        id: "useProviderTokens",
+        id: Options.USE_PROVIDER_TOKENS,
         label: "Use provider tokens",
         description:
           "Use the provider's token count instead of this extension's counter",
@@ -112,12 +132,20 @@ export class CommandManager {
         values: Object.keys(TOGGLE_LABELS),
       },
       {
-        id: "countStrategy",
+        id: Options.COUNT_STRATEGY,
         label: "Count strategy",
         description:
           "Direct counting (server streams tokens) vs estimate counting (server streams chunks)",
         currentValue: config.countStrategy,
         values: Object.keys(COUNT_STRATEGY_LABELS) as CountStrategy[],
+      },
+      {
+        id: Options.END_TPS_BEHAVIOR,
+        label: "End-of-stream TPS",
+        description:
+          "What to show after streaming: overall average or last sliding window value",
+        currentValue: config.endTpsBehavior,
+        values: Object.keys(END_TPS_BEHAVIOR_LABELS) as EndTpsBehavior[],
       },
     ];
   }

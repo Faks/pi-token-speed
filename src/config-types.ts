@@ -9,6 +9,11 @@ export type DisplayMode = "tps" | "ttft" | "stats" | "full";
 export type CountStrategy = "estimate" | "direct";
 
 /**
+ * Behavior for TPS after streaming ends.
+ */
+export type EndTpsBehavior = "average" | "last";
+
+/**
  * Configuration for the token-speed extension.
  * All fields can be overridden via ~/.pi/agent/settings.json under the "tokenSpeed" key.
  */
@@ -25,4 +30,5 @@ export interface TokenSpeedConfig {
   slidingWindow: number;
   useProviderTokens: boolean;
   countStrategy: CountStrategy;
+  endTpsBehavior: EndTpsBehavior;
 }

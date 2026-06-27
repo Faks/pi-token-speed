@@ -1,4 +1,8 @@
-import type { CountStrategy, DisplayMode } from "./config-types";
+import type {
+  CountStrategy,
+  DisplayMode,
+  EndTpsBehavior,
+} from "./config-types";
 
 /**
  * TPS threshold above which speed is considered slow
@@ -42,14 +46,14 @@ export const COLOR_FAST = "#00ff88";
 export const COLOR_BLAZING = "#44ddff";
 
 /**
- * Display mode for the extension
- */
-export const DISPLAY_MODE: DisplayMode = "tps";
-
-/**
  * Sliding window duration (ms) for time-based TPS calculation
  */
 export const SLIDING_WINDOW = 1000;
+
+/**
+ * Display mode for the extension
+ */
+export const DISPLAY_MODE: DisplayMode = "tps";
 
 /**
  * Selection for extension vs provider's counter
@@ -60,3 +64,8 @@ export const USE_PROVIDER_TOKENS = false;
  * Counting strategy for the extension
  */
 export const COUNT_STRATEGY: CountStrategy = "direct";
+
+/**
+ * Behavior for TPS display after streaming ends.
+ */
+export const END_TPS_BEHAVIOR: EndTpsBehavior = "average";

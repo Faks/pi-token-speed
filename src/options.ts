@@ -1,4 +1,8 @@
-import type { CountStrategy, DisplayMode } from "./config-types";
+import type {
+  CountStrategy,
+  DisplayMode,
+  EndTpsBehavior,
+} from "./config-types";
 
 /**
  * Human-readable labels for display mode values.
@@ -16,6 +20,14 @@ export const DISPLAY_LABELS: Record<DisplayMode, string> = {
 export const COUNT_STRATEGY_LABELS: Record<CountStrategy, string> = {
   estimate: "Estimate (fast)",
   direct: "Direct (accurate)",
+};
+
+/**
+ * Human-readable labels for end TPS behavior values.
+ */
+export const END_TPS_BEHAVIOR_LABELS: Record<EndTpsBehavior, string> = {
+  average: "Average (overall)",
+  last: "Last (sliding window)",
 };
 
 /**

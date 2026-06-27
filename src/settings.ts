@@ -11,6 +11,7 @@ import {
   COLOR_SLOW,
   COUNT_STRATEGY,
   DISPLAY_MODE,
+  END_TPS_BEHAVIOR,
   SLIDING_WINDOW,
   TPS_THRESHOLD_BLAZING,
   TPS_THRESHOLD_FAST,
@@ -59,10 +60,11 @@ export class Settings {
       colorMedium: COLOR_MEDIUM,
       colorFast: COLOR_FAST,
       colorBlazing: COLOR_BLAZING,
-      display: DISPLAY_MODE,
       slidingWindow: SLIDING_WINDOW,
+      display: DISPLAY_MODE,
       useProviderTokens: USE_PROVIDER_TOKENS,
       countStrategy: COUNT_STRATEGY,
+      endTpsBehavior: END_TPS_BEHAVIOR,
     };
   }
 

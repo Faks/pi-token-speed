@@ -49,10 +49,11 @@ You can customize the display, speed thresholds and colors by adding a `tokenSpe
     "colorMedium": "#ffaa00",
     "colorFast": "#00ff88",
     "colorBlazing": "#44ddff",
-    "display": "tps",
     "slidingWindow": 1000,
+    "display": "tps",
     "useProviderTokens": false,
-    "countStrategy": "direct"
+    "countStrategy": "direct",
+    "endTpsBehavior": "average"
   }
 }
 ```
@@ -69,10 +70,11 @@ You can customize the display, speed thresholds and colors by adding a `tokenSpe
 | `colorMedium`       | string                         | `"#ffaa00"` | Color for medium tier                                            |
 | `colorFast`         | string                         | `"#00ff88"` | Color for fast tier                                              |
 | `colorBlazing`      | string                         | `"#44ddff"` | Color for blazing tier                                           |
-| `display`           | `tps`, `ttft`, `stats`, `full` | `tps`       | Display mode (see below)                                         |
 | `slidingWindow`     | number                         | `1000`      | Sliding window duration in ms                                    |
+| `display`           | `tps`, `ttft`, `stats`, `full` | `tps`       | Display mode (see below)                                         |
 | `useProviderTokens` | boolean                        | `false`     | Opt-in: use provider-reported count instead of the extension one |
 | `countStrategy`     | `estimate`, `direct`           | `direct`    | Token counting strategy used by the extension's own counter      |
+| `endTpsBehavior`    | `average`, `last`              | `average`   | What to show after streaming ends                                |
 
 ### Interactive Menu
 
@@ -81,6 +83,7 @@ A small interactive menu is available when running `/tps` in the editor, where y
 - **Display mode** — what to show in the status bar
 - **Use provider tokens** — use provider-reported counts instead of the extension's counter
 - **Count strategy** — how the extension counts tokens (`estimate` or `direct`)
+- **End-of-stream TPS** — what to show after streaming ends (`average` or `last`)
 
 ### Sliding Window
 
@@ -124,6 +127,17 @@ When `useProviderTokens` is `false` (default) or when the provider doesn't repor
 
 The `direct` strategy is fast and preserves the original behavior — it counts each streaming delta as 1 token, including toolcalls for `edit` and `write` operations. Use `estimate` when your server streams in small chunks — it approximates the real token count from the delta text, giving a more meaningful TPS reading.
 
+### End-of-Stream TPS Behavior
+
+After streaming ends, the `endTpsBehavior` option controls what TPS value is displayed:
+
+| Behavior            | Behavior                                                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `average` (default) | Returns the overall average TPS (`total tokens / total elapsed seconds`). Consistent with the stats display.                                      |
+| `last`              | Returns the last sliding window TPS measurement from the moment streaming stopped. Useful for seeing how fast the model was streaming at the end. |
+
+This is also configurable via the `/tps` interactive menu.
+
 ## Display Modes
 
 | Mode    | Description                                                                 |
@@ -135,9 +149,9 @@ The `direct` strategy is fast and preserves the original behavior — it counts 
 
 ## Commands
 
-| Command | Description                                                                      |
-| ------- | -------------------------------------------------------------------------------- |
-| `/tps`  | Open settings menu — configure display mode, provider tokens, and count strategy |
+| Command | Description                                                                               |
+| ------- | ----------------------------------------------------------------------------------------- |
+| `/tps`  | Open settings menu — configure options described in [Interactive Menu](#interactive-menu) |
 
 ## How It Works
 
@@ -145,7 +159,9 @@ The `direct` strategy is fast and preserves the original behavior — it counts 
 2. **Message Start** — When the assistant begins streaming, the engine starts tracking
 3. **TTFT Measurement** — When the user message starts, a timer begins. The moment the first token (text, thinking, or tool call) is emitted, the elapsed time is recorded as the time-to-first-token (TTFT) in milliseconds
 4. **Token Update** — Each text/thinking delta is recorded. If `useProviderTokens` is `true` and the provider reports token counts, those are used directly; otherwise the extension's own counter (controlled by `countStrategy`) is used
-5. **Sliding Window** — TPS is calculated using a configurable time window of token timestamps. When streaming ends, the last measurement is retained.
+5. **Sliding Window** — TPS is calculated using a configurable time window of token timestamps. When streaming ends, behavior depends on `endTpsBehavior`:
+   - `average` (default): returns the overall average TPS for consistency with stats.
+   - `last`: returns the last sliding window measurement.
 6. **Message End** — The authoritative token count (if available) is used to snap the total, ensuring the final average is exact
 
 ## Dependencies

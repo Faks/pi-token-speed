@@ -1,4 +1,4 @@
-import { CountStrategy } from "./config-types";
+import type { CountStrategy, EndTpsBehavior } from "./config-types";
 import { settings } from "./settings";
 import { SlidingWindow } from "./sliding-window";
 
@@ -17,6 +17,7 @@ export class TokenSpeedEngine {
   private _slidingWindow!: SlidingWindow;
   private _useProviderTokens!: boolean;
   private _countStrategy!: CountStrategy;
+  private _endTpsBehavior!: EndTpsBehavior;
 
   /**
    * Loads configuration.
@@ -27,6 +28,7 @@ export class TokenSpeedEngine {
     this._slidingWindow = new SlidingWindow(config.slidingWindow);
     this._countStrategy = config.countStrategy;
     this._useProviderTokens = config.useProviderTokens;
+    this._endTpsBehavior = config.endTpsBehavior;
   }
 
   /**
@@ -102,11 +104,24 @@ export class TokenSpeedEngine {
   }
 
   /**
-   * Returns tokens-per-second based on a time-based sliding window.
-   * When streaming has finished, returns the last measurement.
+   * Returns tokens-per-second based on a time-based sliding window while streaming.
+   * When streaming has finished, behavior depends on `endTpsBehavior`:
+   * - `"average"` (default): returns the overall average TPS for consistency with stats.
+   * - `"last"`: returns the last sliding window measurement.
    */
   get tps(): number {
-    return this._tps;
+    if (this._isStreaming) return this._tps;
+    if (this._endTpsBehavior === "last") return this._tps;
+    return this.tpsAvg;
+  }
+
+  /**
+   * Returns the overall average tokens-per-second for the entire stream.
+   * Computed as total tokens / elapsed seconds. Returns 0 if no time has elapsed.
+   */
+  get tpsAvg(): number {
+    if (this.elapsedSeconds <= 0) return 0;
+    return this._tokenCount / this.elapsedSeconds;
   }
 
   /**

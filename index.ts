@@ -12,7 +12,7 @@ import { Renderer } from "./src/renderer";
 export default async (pi: ExtensionAPI) => {
   const engine = new TokenSpeedEngine();
   const renderer = new Renderer(engine);
-  const commands = new CommandManager(renderer);
+  const commands = new CommandManager(renderer, engine);
   const eventManager = new EventManager(engine, renderer);
 
   // Command registration
