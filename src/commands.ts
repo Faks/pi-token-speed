@@ -27,7 +27,7 @@ export class CommandManager {
    * @param ctx The context used by Pi
    */
   async runTps(ctx: ExtensionCommandContext): Promise<void> {
-    const { config } = await settings.getConfig();
+    const config = settings.getConfig();
     const items = this.buildSettingsItems(config);
 
     await ctx.ui.custom<void>((_tui, _theme, _kb, done) =>
@@ -38,9 +38,8 @@ export class CommandManager {
       ),
     );
 
-    // Re-render with the latest config (cache was already reset by setConfig
-    // calls inside the callback, or is still valid if nothing changed)
-    await this.renderer.update(ctx);
+    // Re-render with the latest config
+    this.renderer.update(ctx);
   }
 
   /**
@@ -64,7 +63,7 @@ export class CommandManager {
         countStrategy: newValue as CountStrategy,
       });
     }
-    await this.renderer.update(ctx);
+    this.renderer.update(ctx);
   }
 
   /**

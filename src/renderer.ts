@@ -1,5 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { type TokenSpeedConfig } from "./config-types";
+import { DisplayMode, type TokenSpeedConfig } from "./config-types";
 import { STATUS_KEY } from "./constants";
 import { TokenSpeedEngine } from "./engine";
 import { settings } from "./settings";
@@ -62,58 +62,32 @@ export class Renderer {
   }
 
   /**
-   * Formats the TTFT portion: "TTFT: <time> ms".
-   *
-   * @param ttft The TTFT value in milliseconds
-   * @returns The formatted TTFT string.
-   */
-  private formatTTFT(ttft: number): string {
-    return `TTFT: ${ttft} ms`;
-  }
-
-  /**
    * Builds a suffix for the status bar after the TPS measurement.
    *
    * @param display Display mode to check against
    * @returns The suffix to append
    */
-  private buildSuffix(display: string): string {
-    const { ttft, tokenCount, elapsedSeconds } = this.engine;
+  private buildSuffix(display: DisplayMode): string {
+    const { ttft, tokenCount: tokens, elapsedSeconds: elapsed } = this.engine;
 
     switch (display) {
+      case "tps":
+        return `\u200b`;
       case "ttft":
-        return ` (${this.formatTTFT(ttft)})`;
-
+        return ` (TTFT: ${ttft} ms)\u200b`;
       case "stats":
-        return ` (${this.formatStats(tokenCount, elapsedSeconds)})`;
-
-      case "full": {
-        const parts: string[] = [
-          this.formatStats(tokenCount, elapsedSeconds),
-          this.formatTTFT(ttft),
-        ];
-        return ` (${parts.join(" · ")})`;
-      }
-      default:
-        // Zero-width space to avoid color bleeding
-        return "\u200b";
+        return ` (${this.formatStats(tokens, elapsed)})\u200b`;
+      case "full":
+        return ` (${this.formatStats(tokens, elapsed)} · TTFT: ${ttft} ms)\u200b`;
     }
   }
 
   /**
-   * Renders the first-run placeholder and resets the flag.
-   * Validates config and warns on errors before updating the status.
+   * Renders the first-run placeholder in the status bar.
    *
    * @param ctx The context used by Pi.
    */
-  async initialize(ctx: ExtensionContext): Promise<void> {
-    const { errors } = await settings.getConfig();
-
-    if (errors.length > 0) {
-      const message = ["[pi-token-speed]", ...errors].join("\n");
-      ctx.ui.notify(message, "warning");
-    }
-
+  initialize(ctx: ExtensionContext): void {
     const theme = ctx.ui.theme;
     const text = `${theme.fg("dim", "⚡ TPS:")} --`;
     ctx.ui.setStatus(STATUS_KEY, text);
@@ -124,8 +98,8 @@ export class Renderer {
    *
    * @param ctx The context used by Pi.
    */
-  async update(ctx: ExtensionContext): Promise<void> {
-    const { config } = await settings.getConfig();
+  update(ctx: ExtensionContext): void {
+    const config = settings.getConfig();
     const theme = ctx.ui.theme;
 
     // Render TPS first

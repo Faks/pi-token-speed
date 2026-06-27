@@ -6,12 +6,14 @@ import type {
 
 import { CommandManager } from "./src/commands";
 import { TokenSpeedEngine } from "./src/engine";
+import { EventManager } from "./src/events";
 import { Renderer } from "./src/renderer";
 
 export default async (pi: ExtensionAPI) => {
   const engine = new TokenSpeedEngine();
   const renderer = new Renderer(engine);
   const commands = new CommandManager(renderer);
+  const eventManager = new EventManager(engine, renderer);
 
   // Command registration
   pi.registerCommand("tps", {
@@ -22,67 +24,27 @@ export default async (pi: ExtensionAPI) => {
 
   // Session lifecycle
   pi.on("session_start", async (_, ctx: ExtensionContext) => {
-    await engine.initialize();
-    await renderer.initialize(ctx);
+    await eventManager.handleSessionStart(ctx);
   });
 
-  pi.on("session_shutdown", async () => {
-    engine.stop();
+  pi.on("session_shutdown", () => {
+    eventManager.handleSessionShutdown();
   });
 
   // Streaming lifecycle
-  pi.on("message_start", async (event, _ctx: ExtensionContext) => {
-    if (event.message?.role === "user") {
-      engine.startTTFT();
-    }
-
-    if (event.message?.role === "assistant") {
-      engine.start();
-    }
+  pi.on("message_start", (event, _ctx: ExtensionContext) => {
+    eventManager.handleMessageStart(event);
   });
 
-  pi.on("message_update", async (event, ctx: ExtensionContext) => {
-    const ev = event.assistantMessageEvent;
-
-    if (
-      ev.type === "text_start" ||
-      ev.type === "thinking_start" ||
-      ev.type === "toolcall_start"
-    ) {
-      engine.stopTTFT();
-    }
-
-    if (ev.type === "text_delta" || ev.type === "thinking_delta") {
-      engine.recordDelta(ev.delta, ev.partial?.usage?.output);
-      await renderer.update(ctx);
-    } else if (ev.type === "toolcall_delta") {
-      const toolCall = ev.partial?.content?.[ev.contentIndex];
-
-      // Only edit/write tools are counted (token generation, relevant)
-      // Other tools are skipped (prompt processing, not relevant)
-      if (
-        toolCall?.type === "toolCall" &&
-        (toolCall.name === "edit" || toolCall.name === "write")
-      ) {
-        engine.recordDelta(ev.delta, ev.partial?.usage?.output);
-        await renderer.update(ctx);
-      }
-    }
+  pi.on("message_update", (event, ctx: ExtensionContext) => {
+    eventManager.handleMessageUpdate(event, ctx);
   });
 
-  pi.on("message_end", async (event, ctx: ExtensionContext) => {
-    if (event.message?.role !== "assistant" || !engine.isStreaming) return;
-
-    // Snap the total to the authoritative usage so the final average is exact.
-    engine.reconcileTotal(event.message?.usage?.output ?? 0);
-    engine.stop();
-
-    await renderer.update(ctx);
+  pi.on("message_end", (event, ctx: ExtensionContext) => {
+    eventManager.handleMessageEnd(event, ctx);
   });
 
-  pi.on("turn_end", async () => {
-    if (engine.isStreaming) {
-      engine.stop();
-    }
+  pi.on("turn_end", () => {
+    eventManager.handleTurnEnd();
   });
 };

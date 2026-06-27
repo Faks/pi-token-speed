@@ -41,7 +41,6 @@ You can customize the display, speed thresholds and colors by adding a `tokenSpe
 ```json
 {
   "tokenSpeed": {
-    "display": "tps",
     "tpsSlow": 0,
     "tpsMedium": 15,
     "tpsFast": 30,
@@ -50,6 +49,7 @@ You can customize the display, speed thresholds and colors by adding a `tokenSpe
     "colorMedium": "#ffaa00",
     "colorFast": "#00ff88",
     "colorBlazing": "#44ddff",
+    "display": "tps",
     "slidingWindow": 1000,
     "useProviderTokens": false,
     "countStrategy": "direct"
@@ -59,20 +59,20 @@ You can customize the display, speed thresholds and colors by adding a `tokenSpe
 
 ### Configuration Options
 
-| Option              | Type                           | Default     | Description                                                                  |
-| ------------------- | ------------------------------ | ----------- | ---------------------------------------------------------------------------- |
-| `display`           | `tps`, `ttft`, `stats`, `full` | `tps`       | Which metrics to display (see Display Modes below)                           |
-| `tpsSlow`           | number                         | `0`         | Minimum TPS threshold ("slow")                                               |
-| `tpsMedium`         | number                         | `15`        | TPS above this is "medium"                                                   |
-| `tpsFast`           | number                         | `30`        | TPS above this is "fast"                                                     |
-| `tpsBlazing`        | number                         | `45`        | TPS above this is "blazing"                                                  |
-| `colorSlow`         | string                         | `"#ff4444"` | Color for slow tier                                                          |
-| `colorMedium`       | string                         | `"#ffaa00"` | Color for medium tier                                                        |
-| `colorFast`         | string                         | `"#00ff88"` | Color for fast tier                                                          |
-| `colorBlazing`      | string                         | `"#44ddff"` | Color for blazing tier                                                       |
-| `slidingWindow`     | number                         | `1000`      | Sliding window duration in ms                                                |
-| `useProviderTokens` | boolean                        | `false`     | Opt-in: use provider-reported counts instead of this extension's own counter |
-| `countStrategy`     | `estimate`, `direct`           | `direct`    | Token counting strategy used by the extension's own counter                  |
+| Option              | Type                           | Default     | Description                                                      |
+| ------------------- | ------------------------------ | ----------- | ---------------------------------------------------------------- |
+| `tpsSlow`           | number                         | `0`         | Minimum TPS threshold ("slow")                                   |
+| `tpsMedium`         | number                         | `15`        | TPS above this is "medium"                                       |
+| `tpsFast`           | number                         | `30`        | TPS above this is "fast"                                         |
+| `tpsBlazing`        | number                         | `45`        | TPS above this is "blazing"                                      |
+| `colorSlow`         | string                         | `"#ff4444"` | Color for slow tier                                              |
+| `colorMedium`       | string                         | `"#ffaa00"` | Color for medium tier                                            |
+| `colorFast`         | string                         | `"#00ff88"` | Color for fast tier                                              |
+| `colorBlazing`      | string                         | `"#44ddff"` | Color for blazing tier                                           |
+| `display`           | `tps`, `ttft`, `stats`, `full` | `tps`       | Display mode (see below)                                         |
+| `slidingWindow`     | number                         | `1000`      | Sliding window duration in ms                                    |
+| `useProviderTokens` | boolean                        | `false`     | Opt-in: use provider-reported count instead of the extension one |
+| `countStrategy`     | `estimate`, `direct`           | `direct`    | Token counting strategy used by the extension's own counter      |
 
 ### Interactive Menu
 
@@ -84,7 +84,7 @@ A small interactive menu is available when running `/tps` in the editor, where y
 
 ### Sliding Window
 
-The sliding window determines how many recent tokens are used to calculate TPS. A larger window produces smoother readings at the cost of responsiveness; a smaller window reacts faster but can be noisier.
+The sliding window determines how many recent tokens are used to calculate TPS. A larger window produces smoother readings at the cost of responsiveness; a smaller window reacts faster but can be noisier. To avoid burst spikes, the time span used in the calculation is clamped to a minimum threshold.
 
 | Server speed        | Recommended window | Why                                                       |
 | ------------------- | ------------------ | --------------------------------------------------------- |
@@ -145,7 +145,7 @@ The `direct` strategy is fast and preserves the original behavior — it counts 
 2. **Message Start** — When the assistant begins streaming, the engine starts tracking
 3. **TTFT Measurement** — When the user message starts, a timer begins. The moment the first token (text, thinking, or tool call) is emitted, the elapsed time is recorded as the time-to-first-token (TTFT) in milliseconds
 4. **Token Update** — Each text/thinking delta is recorded. If `useProviderTokens` is `true` and the provider reports token counts, those are used directly; otherwise the extension's own counter (controlled by `countStrategy`) is used
-5. **Sliding Window** — TPS is calculated using a configurable time window of token timestamps
+5. **Sliding Window** — TPS is calculated using a configurable time window of token timestamps. When streaming ends, the last measurement is retained.
 6. **Message End** — The authoritative token count (if available) is used to snap the total, ensuring the final average is exact
 
 ## Dependencies

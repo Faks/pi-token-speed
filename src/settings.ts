@@ -1,7 +1,9 @@
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { TokenSpeedConfig } from "./config-types";
+import type { TokenSpeedConfig } from "./config-types";
+import { STATUS_KEY } from "./constants";
 import {
   COLOR_BLAZING,
   COLOR_FAST,
@@ -10,19 +12,19 @@ import {
   COUNT_STRATEGY,
   DISPLAY_MODE,
   SLIDING_WINDOW,
-  STATUS_KEY,
   TPS_THRESHOLD_BLAZING,
   TPS_THRESHOLD_FAST,
   TPS_THRESHOLD_MEDIUM,
   TPS_THRESHOLD_SLOW,
   USE_PROVIDER_TOKENS,
-} from "./constants";
-import { IO } from "./io";
+} from "./defaults";
 import { Validator } from "./validation";
 
 /**
- * Manages TokenSpeed configuration: defaults, user settings, validation,
- * caching, and persistence to ~/.pi/agent/settings.json.
+ * Manages TokenSpeed configuration: defaults, user settings, caching,
+ * and persistence to ~/.pi/agent/settings.json.
+ *
+ * Delegates validation to the `Validator` utility class.
  *
  * Use the exported `settings` singleton — do not instantiate directly.
  *
@@ -39,7 +41,7 @@ export class Settings {
    * @internal Use the exported `settings` singleton instead.
    */
   constructor(
-    private readonly io: IO = new IO(join(getAgentDir(), "settings.json")),
+    private readonly settingsPath = join(getAgentDir(), "settings.json"),
   ) {}
 
   /**
@@ -49,7 +51,6 @@ export class Settings {
    */
   getDefaultConfig(): TokenSpeedConfig {
     return {
-      display: DISPLAY_MODE,
       tpsSlow: TPS_THRESHOLD_SLOW,
       tpsMedium: TPS_THRESHOLD_MEDIUM,
       tpsFast: TPS_THRESHOLD_FAST,
@@ -58,6 +59,7 @@ export class Settings {
       colorMedium: COLOR_MEDIUM,
       colorFast: COLOR_FAST,
       colorBlazing: COLOR_BLAZING,
+      display: DISPLAY_MODE,
       slidingWindow: SLIDING_WINDOW,
       useProviderTokens: USE_PROVIDER_TOKENS,
       countStrategy: COUNT_STRATEGY,
@@ -65,97 +67,61 @@ export class Settings {
   }
 
   /**
-   * Resolves the final config, merging user settings with built-in defaults,
-   * validating, and caching the result.
+   * Initializes the config values
    */
-  async getConfig(): Promise<{ config: TokenSpeedConfig; errors: string[] }> {
-    if (this.cachedConfig)
-      return { config: this.cachedConfig, errors: this.cachedErrors };
-
+  async initialize(): Promise<TokenSpeedConfig> {
     const defaults = this.getDefaultConfig();
     const userSettings = await this.readUserSettings();
 
     const merged = { ...defaults, ...userSettings };
-    this.cachedConfig = this.validateConfig(merged);
+    const { config, errors } = Validator.validate(merged);
+    this.cachedConfig = config;
+    this.cachedErrors = errors;
 
-    return { config: this.cachedConfig, errors: this.cachedErrors };
+    return this.cachedConfig;
   }
 
   /**
-   * Validates the merged config, correcting invalid values and recording errors.
-   *
-   * @param config The configuration to check
-   * @returns A corrected configuration
+   * Returns the cached configuration, or defaults if not yet initialized.
    */
-  private validateConfig(config: TokenSpeedConfig): TokenSpeedConfig {
-    const validator = new Validator(config);
-    const response = { ...config };
-
-    // Validate display mode
-    if (!validator.isValidDisplayMode()) {
-      this.cachedErrors.push(
-        `- Invalid display "${config.display}" — defaulting to "${DISPLAY_MODE}".`,
-      );
-      response.display = DISPLAY_MODE;
-    }
-
-    // Validate count strategy
-    if (!validator.isValidCountStrategy()) {
-      this.cachedErrors.push(
-        `- Invalid countStrategy "${config.countStrategy}" — defaulting to "${COUNT_STRATEGY}".`,
-      );
-      response.countStrategy = COUNT_STRATEGY;
-    }
-
-    // Validate useProviderTokens
-    if (typeof config.useProviderTokens !== "boolean") {
-      this.cachedErrors.push(
-        `- Invalid useProviderTokens (expected boolean) — defaulting to ${USE_PROVIDER_TOKENS}.`,
-      );
-      response.useProviderTokens = USE_PROVIDER_TOKENS;
-    }
-
-    // Validate sliding window time
-    if (!validator.isValidSlidingWindow()) {
-      this.cachedErrors.push(
-        `- Invalid slidingWindow "${config.slidingWindow}" — defaulting to ${SLIDING_WINDOW}.`,
-      );
-      response.slidingWindow = SLIDING_WINDOW;
-    }
-
-    // Validate thresholds
-    if (!validator.isValidThresholdOrder()) {
-      this.cachedErrors.push("- TPS thresholds must be in ascending order.");
-      this.cachedErrors.push(
-        `  Found: ${config.tpsSlow} < ${config.tpsMedium} < ${config.tpsFast} < ${config.tpsBlazing}.`,
-      );
-    }
-
-    // Validate colors
-    if (!validator.isValidColorDefinition()) {
-      this.cachedErrors.push(
-        "- Colors must be valid 24-bit truecolor ANSI hex strings (e.g., '#00ff88').",
-        `  Found: ${config.colorSlow} | ${config.colorMedium} | ${config.colorFast} | ${config.colorBlazing}.`,
-      );
-    }
-
-    return response;
+  getConfig(): TokenSpeedConfig {
+    return this.cachedConfig || this.getDefaultConfig();
   }
 
   /**
-   * Writes a partial TokenSpeedConfig, invalidating the cache.
+   * Returns validation errors from the last config resolution.
+   * Only relevant at initialization time (e.g., to show warnings).
+   */
+  getErrors(): string[] {
+    return this.cachedErrors;
+  }
+
+  /**
+   * Writes a partial TokenSpeedConfig and updates the cache.
    */
   async setConfig(partial: Partial<TokenSpeedConfig>): Promise<void> {
     await this.writeUserSettings(partial);
-    this.resetConfigCache();
+    const current = this.cachedConfig || this.getDefaultConfig();
+    this.cachedConfig = { ...current, ...partial };
   }
 
   /**
-   * Resets the cached config, forcing a fresh read from disk on the next call.
+   * Reads and parses the settings file, returning an empty object on failure.
    */
-  resetConfigCache(): void {
-    this.cachedConfig = null;
-    this.cachedErrors = [];
+  private async readSettings(): Promise<Record<string, unknown>> {
+    try {
+      const raw = await readFile(this.settingsPath, "utf-8");
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }
+
+  /**
+   * Writes a JSON object to the settings file with 2-space indentation.
+   */
+  private async writeSettings(data: Record<string, unknown>): Promise<void> {
+    await writeFile(this.settingsPath, JSON.stringify(data, null, 2), "utf-8");
   }
 
   /**
@@ -164,7 +130,7 @@ export class Settings {
    * @returns The TokenSpeed settings object.
    */
   private async readUserSettings(): Promise<TokenSpeedConfig> {
-    const settings = await this.io.read();
+    const settings = await this.readSettings();
     return (settings[STATUS_KEY] || {}) as TokenSpeedConfig;
   }
 
@@ -177,11 +143,11 @@ export class Settings {
   private async writeUserSettings(
     partial: Partial<TokenSpeedConfig>,
   ): Promise<void> {
-    const settings = await this.io.read();
+    const settings = await this.readSettings();
     const current = (settings[STATUS_KEY] as Record<string, unknown>) || {};
     settings[STATUS_KEY] = { ...current, ...partial };
 
-    await this.io.write(settings);
+    await this.writeSettings(settings);
   }
 }
 

@@ -1,5 +1,8 @@
+import { CountStrategy } from "./config-types";
 import { settings } from "./settings";
 import { SlidingWindow } from "./sliding-window";
+
+const TOKEN_REGEX = /\w+|[^\s\w]/g;
 
 export class TokenSpeedEngine {
   private _isStreaming = false;
@@ -8,18 +11,19 @@ export class TokenSpeedEngine {
   private _endTime = 0;
   private _ttftStart = 0;
   private _ttftEnd = 0;
-  private _finalTps = 0;
+  private _tps = 0;
   private _countedUsageOutput = 0;
 
   private _slidingWindow!: SlidingWindow;
   private _useProviderTokens!: boolean;
-  private _countStrategy!: "estimate" | "direct";
+  private _countStrategy!: CountStrategy;
 
   /**
-   * Loads configuration from disk. Must be called before any other method.
+   * Loads configuration.
+   * Must be called after `settings.initialize()`.
    */
-  async initialize(): Promise<void> {
-    const { config } = await settings.getConfig();
+  initialize(): void {
+    const config = settings.getConfig();
     this._slidingWindow = new SlidingWindow(config.slidingWindow);
     this._countStrategy = config.countStrategy;
     this._useProviderTokens = config.useProviderTokens;
@@ -102,11 +106,7 @@ export class TokenSpeedEngine {
    * When streaming has finished, returns the last measurement.
    */
   get tps(): number {
-    if (this.isStreaming) {
-      this._finalTps = this._slidingWindow.getTps(Date.now());
-    }
-
-    return this._finalTps;
+    return this._tps;
   }
 
   /**
@@ -126,7 +126,7 @@ export class TokenSpeedEngine {
     this._endTime = Date.now();
     this._slidingWindow.reset();
     this._countedUsageOutput = 0;
-    this._finalTps = 0;
+    this._tps = 0;
   }
 
   /**
@@ -148,11 +148,10 @@ export class TokenSpeedEngine {
   stopTTFT(): void {
     if (this._ttftEnd !== 0) return;
 
-    // Record the timestamp
-    this._ttftEnd = Date.now();
-
     // Align streaming window start with the first token arrival
-    this._startTime = Date.now();
+    const now = Date.now();
+    this._ttftEnd = now;
+    this._startTime = now;
   }
 
   /**
@@ -174,21 +173,19 @@ export class TokenSpeedEngine {
 
     this._tokenCount += tokens;
     this._slidingWindow.record(tokens);
+    this._tps = this._slidingWindow.getTps(Date.now());
   }
 
   /**
    * Estimates tokens in a text string using a word-boundary regex.
    * Used as a fallback when the provider doesn't report token counts.
    *
-   * The regex matches word characters and non-whitespace punctuation:
-   * `/\w+|[\^\s\w]/g` — counts words and punctuation separately
-   *
    * @param text The text to estimate token count for.
    * @returns The estimated number of tokens.
    */
   private estimateTokens(text: string): number {
     if (!text) return 0;
-    const matches = text.match(/\w+|[^\s\w]/g);
+    const matches = text.match(TOKEN_REGEX);
     return matches ? matches.length : 0;
   }
 }
