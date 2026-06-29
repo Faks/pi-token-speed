@@ -97,12 +97,10 @@ export class EventManager {
 
     if (ev.type === "toolcall_delta") {
       const toolCall = ev.partial?.content?.[ev.contentIndex ?? 0];
+      if (toolCall?.type !== "toolCall") return;
 
       // Only edit/write tools are counted (token generation, relevant)
-      if (
-        toolCall?.type === "toolCall" &&
-        (toolCall.name === "edit" || toolCall.name === "write")
-      ) {
+      if (toolCall.name === "edit" || toolCall.name === "write") {
         this.engine.recordDelta(ev.delta ?? "", ev.partial?.usage?.output);
         this.renderer.update(ctx);
       }
