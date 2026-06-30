@@ -1,4 +1,5 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { TOKEN_GENERATION_TOOLS } from "./constants";
 import { TokenSpeedEngine } from "./engine";
 import { Renderer } from "./renderer";
 import { settings } from "./settings";
@@ -100,7 +101,7 @@ export class EventManager {
       if (toolCall?.type !== "toolCall") return;
 
       // Only edit/write tools are counted (token generation, relevant)
-      if (toolCall.name === "edit" || toolCall.name === "write") {
+      if (this.isTokenGenerationTool(toolCall)) {
         this.engine.recordDelta(ev.delta ?? "", ev.partial?.usage?.output);
         this.renderer.update(ctx);
       }
@@ -111,7 +112,7 @@ export class EventManager {
       if (toolCall?.type !== "toolCall") return;
 
       // Pause the timer for prompt processing tools, so they don't skew the average
-      if (toolCall.name !== "edit" && toolCall.name !== "write") {
+      if (this.isPromptProcessingTool(toolCall)) {
         this.engine.pause();
       }
     }
@@ -142,5 +143,25 @@ export class EventManager {
     if (this.engine.isStreaming) {
       this.engine.stop();
     }
+  }
+
+  /**
+   * Determines if it's a tool that generates tokens
+   *
+   * @param tool The tool used by Pi
+   * @returns True if it's related to token generation
+   */
+  private isTokenGenerationTool(tool?: ToolCall): boolean {
+    return TOKEN_GENERATION_TOOLS.has(tool?.name ?? "");
+  }
+
+  /**
+   * Determines if it's a tool that processes tokens
+   *
+   * @param tool The tool used by Pi
+   * @returns True if it's related to prompt processing
+   */
+  private isPromptProcessingTool(tool?: ToolCall): boolean {
+    return !this.isTokenGenerationTool(tool);
   }
 }
