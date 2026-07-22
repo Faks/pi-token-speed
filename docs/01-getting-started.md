@@ -5,9 +5,6 @@
 Install the extension using one of the following methods:
 
 ```bash
-# From npm
-pi install npm:@faks/pi-token-speed
-
 # From GitHub
 pi install https://github.com/faks/pi-token-speed
 ```
