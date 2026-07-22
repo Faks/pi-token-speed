@@ -25,13 +25,7 @@ A [Pi Coding Agent](https://pi.dev/) extension that displays real-time **tokens-
 This package is a Pi extension. Install it with
 
 ```bash
-npm install pi-token-speed
-```
-
-or
-
-```bash
-pi install https://github.com/gsanhueza/pi-token-speed
+pi install https://github.com/faks/pi-token-speed
 ```
 
 ## Configuration

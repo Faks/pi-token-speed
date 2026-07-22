@@ -5,10 +5,10 @@ import type {
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 
-import { CommandManager } from "./src/commands";
-import { TokenSpeedEngine } from "./src/engine";
-import { EventManager } from "./src/events";
-import { Renderer } from "./src/renderer";
+import { CommandManager } from "./commands";
+import { TokenSpeedEngine } from "./engine";
+import { EventManager } from "./events";
+import { Renderer } from "./renderer";
 
 export default async (pi: ExtensionAPI) => {
   const engine = new TokenSpeedEngine();

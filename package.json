@@ -1,25 +1,29 @@
 {
-  "name": "pi-token-speed",
-  "version": "0.7.0",
+  "name": "@faks/pi-token-speed",
+  "version": "0.7.1",
   "description": "Pi extension to measure tokens per second via sliding window.",
+  "scripts": {
+    "test": "vitest run"
+  },
   "keywords": [
     "pi",
     "pi-package",
-    "pi-extension"
+    "pi-extension",
+    "pi-token-speed"
   ],
-  "author": "Gabriel Sanhueza",
-  "license": "MIT",
+  "author": "Oskars Germovs",
+  "license": "AGPL-3.0 OR BSL-1.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gsanhueza/pi-token-speed.git"
+    "url": "git+https://github.com/faks/pi-token-speed.git"
   },
-  "homepage": "https://github.com/gsanhueza/pi-token-speed#readme",
+  "homepage": "https://github.com/faks/pi-token-speed#readme",
   "bugs": {
-    "url": "https://github.com/gsanhueza/pi-token-speed/issues"
+    "url": "https://github.com/faks/pi-token-speed/issues"
   },
   "pi": {
     "extensions": [
-      "./index.ts"
+      "./src/index.ts"
     ]
   },
   "prettier": {
@@ -32,7 +36,8 @@
     "@earendil-works/pi-tui": "*"
   },
   "devDependencies": {
-    "@types/node": "^26.1.0",
-    "prettier-plugin-organize-imports": "^4.3.0"
+    "@types/node": "^26.1.1",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "vitest": "^4.1.10"
   }
 }

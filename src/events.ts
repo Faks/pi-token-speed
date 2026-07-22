@@ -129,7 +129,7 @@ export class EventManager {
     this.engine.stop();
 
     const outputTokens = event.messages.reduce((acc, curr) => {
-      if ("usage" in curr) return acc + curr.usage.output;
+      if ("usage" in curr && curr.usage?.output != null) return acc + curr.usage.output;
       return acc;
     }, 0);
 
