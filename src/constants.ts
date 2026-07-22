@@ -2,7 +2,7 @@ import type {
   CountStrategy,
   DisplayMode,
   EndTpsBehavior,
-} from "@pi-token-speed/Interfaces/config-types";
+} from "./Interfaces/config-types";
 
 // ── Status Bar ──────────────────────────────────────────────────────
 export const STATUS_KEY = "tokenSpeed";

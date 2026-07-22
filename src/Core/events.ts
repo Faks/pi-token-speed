@@ -2,10 +2,10 @@ import type {
   AgentEndEvent,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { TOKEN_GENERATION_TOOLS } from "@pi-token-speed/constants";
+import { TOKEN_GENERATION_TOOLS } from "../constants";
 import { TokenSpeedEngine } from "./engine";
-import { Renderer } from "@pi-token-speed/UI/renderer";
-import { settings } from "@pi-token-speed/Config/settings";
+import { Renderer } from "../UI/renderer";
+import { settings } from "../Config/settings";
 
 interface ToolCall {
   type: string;

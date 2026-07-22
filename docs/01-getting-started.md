@@ -107,4 +107,6 @@ The extension automatically pauses the TPS timer when a prompt processing tool c
 
 - [Configuration](./02-configuration.md) — Learn how to customize the extension
 - [Usage](./03-usage.md) — Explore commands and display modes
+- [API Reference](./api-reference.md) — Technical details for developers
+- [Performance](./performance-benchmarks.md) — Benchmarking and math details
 - [Troubleshooting](./05-troubleshooting.md) — Resolve common issues

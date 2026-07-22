@@ -1,4 +1,4 @@
-import type { CountStrategy, EndTpsBehavior } from "@pi-token-speed/Interfaces/config-types";
+import type { CountStrategy, EndTpsBehavior } from "../Interfaces/config-types";
 import { SlidingWindow } from "./sliding-window";
 
 const TOKEN_REGEX = /\w+|[^\s\w]/g;

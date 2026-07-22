@@ -4,7 +4,7 @@ import { Renderer } from "../src/UI/renderer";
 import { EventManager } from "../src/Core/events";
 
 // Mock settings — config defined inside factory to avoid hoisting issues
-vi.mock("@pi-token-speed/Config/settings", () => {
+vi.mock("../src/Config/settings", () => {
   const MOCK_CONFIG = {
     tpsSlow: 0,
     tpsMedium: 15,
@@ -31,7 +31,7 @@ vi.mock("@pi-token-speed/Config/settings", () => {
 });
 
 // Mock renderer
-vi.mock("@pi-token-speed/UI/renderer", () => {
+vi.mock("../src/UI/renderer", () => {
   class MockRenderer {
     initialize() {}
     update() {}

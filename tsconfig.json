@@ -6,10 +6,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "noEmit": true,
-    "paths": {
-      "@pi-token-speed/*": ["./src/*"]
-    }
+    "noEmit": true
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"],
   "exclude": ["vitest.config.ts"]
