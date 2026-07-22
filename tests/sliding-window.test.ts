@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SlidingWindow } from "./sliding-window";
+import { SlidingWindow } from "../src/sliding-window";
 
 describe("SlidingWindow", () => {
   const WINDOW_MS = 1000;

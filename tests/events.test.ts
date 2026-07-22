@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TokenSpeedEngine } from "./engine";
-import { Renderer } from "./renderer";
-import { EventManager } from "./events";
+import { TokenSpeedEngine } from "../src/engine";
+import { Renderer } from "../src/renderer";
+import { EventManager } from "../src/events";
 
 // Mock settings
-vi.mock("./settings", () => ({
+vi.mock("../src/settings", () => ({
   settings: {
     initialize: vi.fn().mockResolvedValue(undefined),
     getErrors: vi.fn().mockReturnValue([]),
@@ -27,7 +27,7 @@ vi.mock("./settings", () => ({
 }));
 
 // Mock renderer
-vi.mock("./renderer", () => {
+vi.mock("../src/renderer", () => {
   class MockRenderer {
     initialize() {}
     update() {}
