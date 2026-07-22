@@ -1,6 +1,6 @@
 {
   "name": "@faks/pi-token-speed",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Pi extension to measure tokens per second via sliding window.",
   "scripts": {
     "test": "vitest run"
