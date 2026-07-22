@@ -1,9 +1,9 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { DisplayMode, type TokenSpeedConfig } from "./config-types";
-import { STATUS_KEY } from "./constants";
-import { TokenSpeedEngine } from "./engine";
-import { settings } from "./settings";
-import { Validator } from "./validation";
+import { DisplayMode, type TokenSpeedConfig } from "@pi-token-speed/Interfaces/config-types";
+import { STATUS_KEY } from "@pi-token-speed/constants";
+import { TokenSpeedEngine } from "@pi-token-speed/Core/engine";
+import { settings } from "@pi-token-speed/Config/settings";
+import { Validator } from "@pi-token-speed/Commands/validation";
 
 /**
  * Renderer for the token-speed status bar.

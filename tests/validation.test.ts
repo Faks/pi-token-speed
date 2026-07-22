@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Validator } from "../src/validation";
+import { Validator } from "../src/Commands/validation";
 
 describe("Validator", () => {
   describe("isValidHex", () => {

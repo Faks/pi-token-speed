@@ -6,16 +6,16 @@ import type {
   DisplayMode,
   EndTpsBehavior,
   TokenSpeedConfig,
-} from "./config-types";
-import { TokenSpeedEngine } from "./engine";
+} from "@pi-token-speed/Interfaces/config-types";
+import { TokenSpeedEngine } from "@pi-token-speed/Core/engine";
 import {
   COUNT_STRATEGY_LABELS,
   DISPLAY_LABELS,
   END_TPS_BEHAVIOR_LABELS,
   TOGGLE_LABELS,
-} from "./options";
-import type { Renderer } from "./renderer";
-import { settings } from "./settings";
+} from "@pi-token-speed/Config/options";
+import type { Renderer } from "@pi-token-speed/UI/renderer";
+import { settings } from "@pi-token-speed/Config/settings";
 
 /**
  * Configuration options

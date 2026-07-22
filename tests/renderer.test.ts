@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TokenSpeedEngine } from "../src/engine";
-import { Renderer } from "../src/renderer";
-import { settings } from "../src/settings";
-import { Validator } from "../src/validation";
+import { TokenSpeedEngine } from "../src/Core/engine";
+import { Renderer } from "../src/UI/renderer";
+import { settings } from "../src/Config/settings";
+import { Validator } from "../src/Commands/validation";
 
 const MOCK_CONFIG = {
   tpsSlow: 0,
@@ -21,7 +21,7 @@ const MOCK_CONFIG = {
 };
 
 // Mock settings
-vi.mock("./settings", () => ({
+vi.mock("../src/Config/settings", () => ({
   settings: {
     getConfig: () => MOCK_CONFIG,
   },

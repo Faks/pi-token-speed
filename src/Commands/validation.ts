@@ -3,8 +3,8 @@ import type {
   DisplayMode,
   EndTpsBehavior,
   TokenSpeedConfig,
-} from "./config-types";
-import { MAX_SLIDING_WINDOW, MIN_SLIDING_WINDOW } from "./constants";
+} from "@pi-token-speed/Interfaces/config-types";
+import { MAX_SLIDING_WINDOW, MIN_SLIDING_WINDOW } from "@pi-token-speed/constants";
 import {
   COLOR_BLAZING,
   COLOR_FAST,
@@ -19,12 +19,12 @@ import {
   TPS_THRESHOLD_MEDIUM,
   TPS_THRESHOLD_SLOW,
   USE_PROVIDER_TOKENS,
-} from "./defaults";
+} from "../Config/defaults";
 import {
   COUNT_STRATEGY_LABELS,
   DISPLAY_LABELS,
   END_TPS_BEHAVIOR_LABELS,
-} from "./options";
+} from "@pi-token-speed/Config/options";
 
 /**
  * Static utility class for TokenSpeed configuration validation.

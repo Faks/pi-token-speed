@@ -2,7 +2,7 @@ import type {
   CountStrategy,
   DisplayMode,
   EndTpsBehavior,
-} from "./config-types";
+} from "@pi-token-speed/Interfaces/config-types";
 
 /**
  * Human-readable labels for display mode values.

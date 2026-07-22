@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TokenSpeedEngine } from "../src/engine";
+import { TokenSpeedEngine } from "../src/Core/engine";
 
 vi.useFakeTimers();
 
