@@ -32,8 +32,8 @@ enum Options {
  */
 export class CommandManager {
   constructor(
-    private readonly renderer: Renderer,
-    private readonly engine: TokenSpeedEngine,
+    public readonly renderer: Renderer,
+    public readonly engine: TokenSpeedEngine,
   ) {}
 
   /**
@@ -62,7 +62,7 @@ export class CommandManager {
    * @param newValue The new value to apply
    * @param ctx The context used by Pi
    */
-  private async handleSettingChange(
+  public async handleSettingChange(
     id: string,
     newValue: string,
     ctx: ExtensionCommandContext,
@@ -82,7 +82,7 @@ export class CommandManager {
     }
 
     // Re-render with the latest config
-    this.engine.initialize();
+    this.engine.initialize(settings.getConfig());
     this.renderer.update(ctx);
   }
 
@@ -94,7 +94,7 @@ export class CommandManager {
    * @param onClose Callback when the dialog closes
    * @returns The configured SettingsList instance
    */
-  private createSettingsList(
+  public createSettingsList(
     items: SettingItem[],
     onChange: (id: string, newValue: string) => void,
     onClose: () => void,
@@ -114,7 +114,7 @@ export class CommandManager {
    * @param config The resolved configuration
    * @returns The array of SettingItem objects
    */
-  private buildSettingsItems(config: TokenSpeedConfig): SettingItem[] {
+  public buildSettingsItems(config: TokenSpeedConfig): SettingItem[] {
     return [
       {
         id: Options.DISPLAY,

@@ -1,35 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { Validator } from "../src/Commands/validation";
+import { isValidHex } from "../src/constants";
 
 describe("Validator", () => {
   describe("isValidHex", () => {
     it("accepts valid hex colors", () => {
-      expect(Validator.isValidHex("#ff0000")).toBe(true);
-      expect(Validator.isValidHex("#00ff00")).toBe(true);
-      expect(Validator.isValidHex("#0000ff")).toBe(true);
-      expect(Validator.isValidHex("#ffffff")).toBe(true);
-      expect(Validator.isValidHex("#000000")).toBe(true);
-      expect(Validator.isValidHex("#AbCdEf")).toBe(true);
-      expect(Validator.isValidHex("#aBcDeF")).toBe(true);
+      expect(isValidHex("#ff0000")).toBe(true);
+      expect(isValidHex("#00ff00")).toBe(true);
+      expect(isValidHex("#0000ff")).toBe(true);
+      expect(isValidHex("#ffffff")).toBe(true);
+      expect(isValidHex("#000000")).toBe(true);
+      expect(isValidHex("#AbCdEf")).toBe(true);
+      expect(isValidHex("#aBcDeF")).toBe(true);
     });
 
     it("rejects invalid hex colors", () => {
-      expect(Validator.isValidHex("ff0000")).toBe(false); // missing #
-      expect(Validator.isValidHex("#f00")).toBe(false); // 3 chars
-      expect(Validator.isValidHex("#ff000")).toBe(false); // 5 chars
-      expect(Validator.isValidHex("#ff00000")).toBe(false); // 7 chars
-      expect(Validator.isValidHex("#gggggg")).toBe(false); // invalid chars
-      expect(Validator.isValidHex("")).toBe(false);
-      expect(Validator.isValidHex("#xyzxyz")).toBe(false);
-      expect(Validator.isValidHex("#12345")).toBe(false);
-      expect(Validator.isValidHex("random")).toBe(false);
+      expect(isValidHex("ff0000")).toBe(false); // missing #
+      expect(isValidHex("#f00")).toBe(false); // 3 chars
+      expect(isValidHex("#ff000")).toBe(false); // 5 chars
+      expect(isValidHex("#ff00000")).toBe(false); // 7 chars
+      expect(isValidHex("#gggggg")).toBe(false); // invalid chars
+      expect(isValidHex("")).toBe(false);
+      expect(isValidHex("#xyzxyz")).toBe(false);
+      expect(isValidHex("#12345")).toBe(false);
+      expect(isValidHex("random")).toBe(false);
     });
   });
 
   describe("validate — display mode", () => {
     it("accepts valid display modes", () => {
       for (const mode of ["tps", "ttft", "stats", "full"] as const) {
-        const { config } = Validator.validate({
+        const { config } = new Validator().validate({
           ...getDefaultConfig(),
           display: mode,
         });
@@ -38,7 +39,7 @@ describe("Validator", () => {
     });
 
     it("defaults to 'tps' for invalid display mode", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         display: "invalid" as any,
       });
@@ -50,7 +51,7 @@ describe("Validator", () => {
   describe("validate — count strategy", () => {
     it("accepts valid count strategies", () => {
       for (const strategy of ["estimate", "direct"] as const) {
-        const { config } = Validator.validate({
+        const { config } = new Validator().validate({
           ...getDefaultConfig(),
           countStrategy: strategy,
         });
@@ -59,7 +60,7 @@ describe("Validator", () => {
     });
 
     it("defaults to 'direct' for invalid count strategy", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         countStrategy: "invalid" as any,
       });
@@ -70,13 +71,13 @@ describe("Validator", () => {
 
   describe("validate — useProviderTokens", () => {
     it("accepts boolean values", () => {
-      const { config: c1 } = Validator.validate({
+      const { config: c1 } = new Validator().validate({
         ...getDefaultConfig(),
         useProviderTokens: true,
       });
       expect(c1.useProviderTokens).toBe(true);
 
-      const { config: c2 } = Validator.validate({
+      const { config: c2 } = new Validator().validate({
         ...getDefaultConfig(),
         useProviderTokens: false,
       });
@@ -84,7 +85,7 @@ describe("Validator", () => {
     });
 
     it("defaults to false for non-boolean values", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         useProviderTokens: "true" as any,
       });
@@ -96,7 +97,7 @@ describe("Validator", () => {
   describe("validate — slidingWindow", () => {
     it("accepts valid sliding window values", () => {
       for (const ms of [100, 500, 1000, 5000, 30000]) {
-        const { config } = Validator.validate({
+        const { config } = new Validator().validate({
           ...getDefaultConfig(),
           slidingWindow: ms,
         });
@@ -105,7 +106,7 @@ describe("Validator", () => {
     });
 
     it("defaults for out-of-range values", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         slidingWindow: 50, // below MIN (100)
       });
@@ -114,7 +115,7 @@ describe("Validator", () => {
     });
 
     it("defaults for non-number values", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         slidingWindow: "abc" as any,
       });
@@ -126,7 +127,7 @@ describe("Validator", () => {
   describe("validate — endTpsBehavior", () => {
     it("accepts valid endTpsBehavior values", () => {
       for (const behavior of ["average", "last"] as const) {
-        const { config } = Validator.validate({
+        const { config } = new Validator().validate({
           ...getDefaultConfig(),
           endTpsBehavior: behavior,
         });
@@ -135,7 +136,7 @@ describe("Validator", () => {
     });
 
     it("defaults to 'average' for invalid behavior", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         endTpsBehavior: "invalid" as any,
       });
@@ -146,7 +147,7 @@ describe("Validator", () => {
 
   describe("validate — threshold order", () => {
     it("accepts valid ascending thresholds", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         tpsSlow: 0,
         tpsMedium: 15,
@@ -161,7 +162,7 @@ describe("Validator", () => {
     });
 
     it("reports error for non-ascending thresholds", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         tpsSlow: 50,
         tpsMedium: 30,
@@ -177,7 +178,7 @@ describe("Validator", () => {
 
   describe("validate — color definitions", () => {
     it("accepts valid color definitions", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         colorSlow: "#ff0000",
         colorMedium: "#00ff00",
@@ -188,7 +189,7 @@ describe("Validator", () => {
     });
 
     it("reports error for invalid color definitions", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         ...getDefaultConfig(),
         colorSlow: "not-a-color",
         colorMedium: "#gggggg",
@@ -204,7 +205,7 @@ describe("Validator", () => {
 
   describe("validate — full config", () => {
     it("returns clean config for all valid values", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         display: "full",
         tpsSlow: 0,
         tpsMedium: 10,
@@ -228,7 +229,7 @@ describe("Validator", () => {
     });
 
     it("corrects invalid values and returns defaults", () => {
-      const { config, errors } = Validator.validate({
+      const { config, errors } = new Validator().validate({
         display: "invalid" as any,
         tpsSlow: 100,
         tpsMedium: 50,

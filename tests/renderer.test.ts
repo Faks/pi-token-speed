@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TokenSpeedEngine } from "../src/Core/engine";
 import { Renderer } from "../src/UI/renderer";
 import { settings } from "../src/Config/settings";
-import { Validator } from "../src/Commands/validation";
+import { isValidHex } from "../src/constants";
 
 const MOCK_CONFIG = {
   tpsSlow: 0,
@@ -33,26 +33,26 @@ describe("Renderer", () => {
 
   beforeEach(() => {
     engine = new TokenSpeedEngine();
-    engine.initialize();
+    engine.initialize(MOCK_CONFIG);
     renderer = new Renderer(engine);
   });
 
-  describe("Validator.isValidHex (used by Renderer.colorHex)", () => {
+  describe("isValidHex (used by Renderer.colorHex)", () => {
     it("validates hex colors correctly", () => {
-      expect(Validator.isValidHex("#ff0000")).toBe(true);
-      expect(Validator.isValidHex("#00ff00")).toBe(true);
-      expect(Validator.isValidHex("#0000ff")).toBe(true);
-      expect(Validator.isValidHex("#ffffff")).toBe(true);
-      expect(Validator.isValidHex("#000000")).toBe(true);
-      expect(Validator.isValidHex("#AbCdEf")).toBe(true);
+      expect(isValidHex("#ff0000")).toBe(true);
+      expect(isValidHex("#00ff00")).toBe(true);
+      expect(isValidHex("#0000ff")).toBe(true);
+      expect(isValidHex("#ffffff")).toBe(true);
+      expect(isValidHex("#000000")).toBe(true);
+      expect(isValidHex("#AbCdEf")).toBe(true);
     });
 
     it("rejects invalid hex colors", () => {
-      expect(Validator.isValidHex("ff0000")).toBe(false);
-      expect(Validator.isValidHex("#f00")).toBe(false);
-      expect(Validator.isValidHex("#ff00000")).toBe(false);
-      expect(Validator.isValidHex("#gggggg")).toBe(false);
-      expect(Validator.isValidHex("")).toBe(false);
+      expect(isValidHex("ff0000")).toBe(false);
+      expect(isValidHex("#f00")).toBe(false);
+      expect(isValidHex("#ff00000")).toBe(false);
+      expect(isValidHex("#gggggg")).toBe(false);
+      expect(isValidHex("")).toBe(false);
     });
   });
 

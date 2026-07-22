@@ -1,9 +1,8 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { DisplayMode, type TokenSpeedConfig } from "@pi-token-speed/Interfaces/config-types";
-import { STATUS_KEY } from "@pi-token-speed/constants";
+import { STATUS_KEY, isValidHex } from "@pi-token-speed/constants";
 import { TokenSpeedEngine } from "@pi-token-speed/Core/engine";
 import { settings } from "@pi-token-speed/Config/settings";
-import { Validator } from "@pi-token-speed/Commands/validation";
 
 /**
  * Renderer for the token-speed status bar.
@@ -12,7 +11,7 @@ export class Renderer {
   /**
    * Creates a new Renderer bound to an engine.
    */
-  constructor(private readonly engine: TokenSpeedEngine) {}
+  constructor(public readonly engine: TokenSpeedEngine) {}
 
   /**
    * Applies a custom hex color using 24-bit truecolor ANSI escape codes.
@@ -21,8 +20,8 @@ export class Renderer {
    * @param hex The hex color string, e.g. "#abcdef"
    * @returns The colored text, or the original text if hex is invalid.
    */
-  private colorHex(text: string, hex: string): string {
-    if (!Validator.isValidHex(hex)) return text;
+  public colorHex(text: string, hex: string): string {
+    if (!isValidHex(hex)) return text;
 
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
@@ -38,7 +37,7 @@ export class Renderer {
    * @param tps The TPS value to colorize
    * @returns The hex color string, or empty string if no color should be applied.
    */
-  private getColor(config: TokenSpeedConfig, tps: number | null): string {
+  public getColor(config: TokenSpeedConfig, tps: number | null): string {
     if (tps == null) return "";
 
     if (tps >= config.tpsBlazing) return config.colorBlazing;
@@ -56,7 +55,7 @@ export class Renderer {
    * @param elapsedSeconds The elapsed time in seconds
    * @returns The formatted stats string.
    */
-  private formatStats(tokenCount: number, elapsedSeconds: number): string {
+  public formatStats(tokenCount: number, elapsedSeconds: number): string {
     if (elapsedSeconds <= 0) return `${tokenCount} tok`;
     return `${tokenCount} tok in ${elapsedSeconds.toFixed(1)}s`;
   }
@@ -67,7 +66,7 @@ export class Renderer {
    * @param display Display mode to check against
    * @returns The suffix to append
    */
-  private buildSuffix(display: DisplayMode): string {
+  public buildSuffix(display: DisplayMode): string {
     const { ttft, tokenCount: tokens, elapsedSeconds: elapsed } = this.engine;
 
     switch (display) {

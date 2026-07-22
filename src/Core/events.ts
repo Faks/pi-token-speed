@@ -29,8 +29,8 @@ interface MessageUpdatePayload {
  */
 export class EventManager {
   constructor(
-    private readonly engine: TokenSpeedEngine,
-    private readonly renderer: Renderer,
+    public readonly engine: TokenSpeedEngine,
+    public readonly renderer: Renderer,
   ) {}
 
   /**
@@ -39,15 +39,15 @@ export class EventManager {
    * @param ctx The Pi extension context.
    */
   async handleSessionStart(ctx: ExtensionContext): Promise<void> {
-    await settings.initialize();
-    const errors = settings.getErrors();
+    const config = await settings.initialize();
+    const errors = settings.errors;
 
     if (errors.length > 0) {
       const message = ["[pi-token-speed]", ...errors].join("\n");
       ctx.ui.notify(message, "warning");
     }
 
-    this.engine.initialize();
+    this.engine.initialize(config);
     this.renderer.initialize(ctx);
   }
 
@@ -143,7 +143,7 @@ export class EventManager {
    * @param tool The tool used by Pi
    * @returns True if it's related to token generation
    */
-  private isTokenGenerationTool(tool?: ToolCall): boolean {
+  public isTokenGenerationTool(tool?: ToolCall): boolean {
     return TOKEN_GENERATION_TOOLS.has(tool?.name ?? "");
   }
 
@@ -153,7 +153,7 @@ export class EventManager {
    * @param tool The tool used by Pi
    * @returns True if it's related to prompt processing
    */
-  private isPromptProcessingTool(tool?: ToolCall): boolean {
+  public isPromptProcessingTool(tool?: ToolCall): boolean {
     return !this.isTokenGenerationTool(tool);
   }
 }

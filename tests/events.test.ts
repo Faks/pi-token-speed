@@ -3,28 +3,32 @@ import { TokenSpeedEngine } from "../src/Core/engine";
 import { Renderer } from "../src/UI/renderer";
 import { EventManager } from "../src/Core/events";
 
-// Mock settings
-vi.mock("@pi-token-speed/Config/settings", () => ({
-  settings: {
-    initialize: vi.fn().mockResolvedValue(undefined),
-    getErrors: vi.fn().mockReturnValue([]),
-    getConfig: () => ({
-      tpsSlow: 0,
-      tpsMedium: 15,
-      tpsFast: 30,
-      tpsBlazing: 45,
-      colorSlow: "#ff4444",
-      colorMedium: "#ffaa00",
-      colorFast: "#00ff88",
-      colorBlazing: "#44ddff",
-      slidingWindow: 1000,
-      display: "tps" as const,
-      useProviderTokens: false,
-      countStrategy: "direct" as const,
-      endTpsBehavior: "average" as const,
-    }),
-  },
-}));
+// Mock settings — config defined inside factory to avoid hoisting issues
+vi.mock("@pi-token-speed/Config/settings", () => {
+  const MOCK_CONFIG = {
+    tpsSlow: 0,
+    tpsMedium: 15,
+    tpsFast: 30,
+    tpsBlazing: 45,
+    colorSlow: "#ff4444",
+    colorMedium: "#ffaa00",
+    colorFast: "#00ff88",
+    colorBlazing: "#44ddff",
+    slidingWindow: 1000,
+    display: "tps" as const,
+    useProviderTokens: false,
+    countStrategy: "direct" as const,
+    endTpsBehavior: "average" as const,
+  };
+
+  return {
+    settings: {
+      initialize: vi.fn().mockResolvedValue(MOCK_CONFIG),
+      errors: [] as string[],
+      getConfig: () => MOCK_CONFIG,
+    },
+  };
+});
 
 // Mock renderer
 vi.mock("@pi-token-speed/UI/renderer", () => {
@@ -42,7 +46,12 @@ describe("EventManager", () => {
 
   beforeEach(() => {
     engine = new TokenSpeedEngine();
-    engine.initialize();
+    engine.initialize({
+      slidingWindow: 1000,
+      countStrategy: "direct",
+      useProviderTokens: false,
+      endTpsBehavior: "average",
+    });
     renderer = new Renderer(engine);
     manager = new EventManager(engine, renderer);
   });

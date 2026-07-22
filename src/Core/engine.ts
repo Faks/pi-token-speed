@@ -1,41 +1,49 @@
 import type { CountStrategy, EndTpsBehavior } from "@pi-token-speed/Interfaces/config-types";
-import { settings } from "@pi-token-speed/Config/settings";
 import { SlidingWindow } from "./sliding-window";
 
 const TOKEN_REGEX = /\w+|[^\s\w]/g;
 
+/**
+ * Core engine that tracks token speed metrics during streaming.
+ *
+ * State is managed via public fields for testability.
+ */
 export class TokenSpeedEngine {
-  private _isStreaming = false;
-  private _isPaused = false;
+  isStreaming = false;
+  isPaused = false;
 
-  private _tokenCount = 0;
-  private _startTime = 0;
-  private _endTime = 0;
+  tokenCount = 0;
+  startTime = 0;
+  endTime = 0;
 
-  private _ttftStart = 0;
-  private _ttftEnd = 0;
+  ttftStart = 0;
+  ttftEnd = 0;
 
-  private _startPause = 0;
-  private _pausedMs = 0;
+  startPause = 0;
+  pausedMs = 0;
 
-  private _tps = 0;
-  private _countedUsageOutput = 0;
+  tps = 0;
+  countedUsageOutput = 0;
 
-  private _slidingWindow!: SlidingWindow;
-  private _useProviderTokens!: boolean;
-  private _countStrategy!: CountStrategy;
-  private _endTpsBehavior!: EndTpsBehavior;
+  slidingWindow!: SlidingWindow;
+  useProviderTokens!: boolean;
+  countStrategy!: CountStrategy;
+  endTpsBehavior!: EndTpsBehavior;
 
   /**
    * Loads configuration.
    * Must be called after `settings.initialize()`.
    */
-  initialize(): void {
-    const config = settings.getConfig();
-    this._slidingWindow = new SlidingWindow(config.slidingWindow);
-    this._countStrategy = config.countStrategy;
-    this._useProviderTokens = config.useProviderTokens;
-    this._endTpsBehavior = config.endTpsBehavior;
+  initialize(config: {
+    slidingWindow: number;
+    countStrategy: CountStrategy;
+    useProviderTokens: boolean;
+    endTpsBehavior: EndTpsBehavior;
+  }): void {
+    this.slidingWindow = new SlidingWindow(config.slidingWindow);
+    this.countStrategy = config.countStrategy;
+    this.useProviderTokens = config.useProviderTokens;
+    this.endTpsBehavior = config.endTpsBehavior;
   }
 
   /**
@@ -52,22 +60,22 @@ export class TokenSpeedEngine {
    * @param usageOutput Provider-reported cumulative output-token count (optional).
    */
   recordDelta(delta: string, usageOutput?: number): void {
-    if (!this._isStreaming) return;
-    if (this._isPaused) this.resume();
+    if (!this.isStreaming) return;
+    if (this.isPaused) this.resume();
 
     const shouldUseProviderTokens =
-      this._useProviderTokens &&
+      this.useProviderTokens &&
       usageOutput !== undefined &&
-      usageOutput > this._countedUsageOutput;
+      usageOutput > this.countedUsageOutput;
 
     if (shouldUseProviderTokens) {
-      this.recordTokens(usageOutput - this._countedUsageOutput);
-      this._countedUsageOutput = usageOutput;
+      this.recordTokens(usageOutput - this.countedUsageOutput);
+      this.countedUsageOutput = usageOutput;
       return;
     }
 
     // Fallback: estimate or direct counting
-    if (this._countStrategy === "estimate") {
+    if (this.countStrategy === "estimate") {
       this.recordTokens(this.estimateTokens(delta));
     } else {
       this.recordTokens(1);
@@ -80,30 +88,16 @@ export class TokenSpeedEngine {
    * @param tokens The authoritative token count from the message end event.
    */
   reconcileTotal(tokens: number): void {
-    if (tokens > 0) this._tokenCount = tokens;
-  }
-
-  /**
-   * Whether a streaming session is currently active
-   */
-  get isStreaming() {
-    return this._isStreaming;
-  }
-
-  /**
-   * Total number of tokens recorded since stream start
-   */
-  get tokenCount() {
-    return this._tokenCount;
+    if (tokens > 0) this.tokenCount = tokens;
   }
 
   /**
    * Returns elapsed milliseconds since stream start (0 if not started)
    */
   get elapsedMs(): number {
-    if (this._startTime === 0) return 0;
-    if (this.isStreaming) return Date.now() - this._startTime - this._pausedMs;
-    return this._endTime - this._startTime - this._pausedMs;
+    if (this.startTime === 0) return 0;
+    if (this.isStreaming) return Date.now() - this.startTime - this.pausedMs;
+    return this.endTime - this.startTime - this.pausedMs;
   }
 
   /** Returns elapsed seconds since stream start (0 if not started). */
@@ -117,9 +111,9 @@ export class TokenSpeedEngine {
    * - `"average"` (default): returns the overall average TPS for consistency with stats.
    * - `"last"`: returns the last sliding window measurement.
    */
-  get tps(): number {
-    if (this._isStreaming) return this._tps;
-    if (this._endTpsBehavior === "last") return this._tps;
+  get tpsFinal(): number {
+    if (this.isStreaming) return this.tps;
+    if (this.endTpsBehavior === "last") return this.tps;
     return this.tpsAvg;
   }
 
@@ -129,56 +123,56 @@ export class TokenSpeedEngine {
    */
   get tpsAvg(): number {
     if (this.elapsedSeconds <= 0) return 0;
-    return this._tokenCount / this.elapsedSeconds;
+    return this.tokenCount / this.elapsedSeconds;
   }
 
   /**
    * Returns time to first token in milliseconds
    */
   get ttft(): number {
-    return Math.max(this._ttftEnd - this._ttftStart, 0);
+    return Math.max(this.ttftEnd - this.ttftStart, 0);
   }
 
   /**
    * Starts a new streaming session.
    */
   start(): void {
-    if (this._isStreaming) return;
+    if (this.isStreaming) return;
 
-    this._tokenCount = 0;
-    this._isStreaming = true;
-    this._startTime = Date.now();
-    this._endTime = Date.now();
-    this._slidingWindow.reset();
-    this._countedUsageOutput = 0;
-    this._tps = 0;
-    this._pausedMs = 0;
+    this.tokenCount = 0;
+    this.isStreaming = true;
+    this.startTime = Date.now();
+    this.endTime = Date.now();
+    this.slidingWindow.reset();
+    this.countedUsageOutput = 0;
+    this.tps = 0;
+    this.pausedMs = 0;
   }
 
   /**
    * Records the start timestamp for TTFT measurement.
    */
   startTTFT(): void {
-    this._ttftStart = Date.now();
-    this._ttftEnd = 0;
+    this.ttftStart = Date.now();
+    this.ttftEnd = 0;
   }
 
   /**
    * Records the end timestamp for TTFT measurement.
-   * Only captures once per stream (guarded by _ttftEnd).
+   * Only captures once per stream (guarded by ttftEnd).
    */
   stopTTFT(): void {
-    if (this._ttftEnd !== 0) return;
-    this._ttftEnd = Date.now();
+    if (this.ttftEnd !== 0) return;
+    this.ttftEnd = Date.now();
   }
 
   /**
    * Stops streaming.
    */
   stop(): void {
-    this._isStreaming = false;
-    this._endTime = Date.now();
-    this._slidingWindow.reset();
+    this.isStreaming = false;
+    this.endTime = Date.now();
+    this.slidingWindow.reset();
   }
 
   /**
@@ -186,16 +180,16 @@ export class TokenSpeedEngine {
    * The next `recordDelta` will call `resume()`.
    */
   pause(): void {
-    this._isPaused = true;
-    this._startPause = Date.now();
+    this.isPaused = true;
+    this.startPause = Date.now();
   }
 
   /**
    * Resumes the timer, updating the paused time.
    */
-  private resume(): void {
-    this._isPaused = false;
-    this._pausedMs += Date.now() - this._startPause;
+  resume(): void {
+    this.isPaused = false;
+    this.pausedMs += Date.now() - this.startPause;
   }
 
   /**
@@ -203,12 +197,12 @@ export class TokenSpeedEngine {
    *
    * @param tokens The number of tokens to record.
    */
-  private recordTokens(tokens: number): void {
-    if (!this._isStreaming || tokens <= 0) return;
+  recordTokens(tokens: number): void {
+    if (!this.isStreaming || tokens <= 0) return;
 
-    this._tokenCount += tokens;
-    this._slidingWindow.record(tokens);
-    this._tps = this._slidingWindow.getTps(Date.now());
+    this.tokenCount += tokens;
+    this.slidingWindow.record(tokens);
+    this.tps = this.slidingWindow.getTps(Date.now());
   }
 
   /**
@@ -218,7 +212,7 @@ export class TokenSpeedEngine {
    * @param text The text to estimate token count for.
    * @returns The estimated number of tokens.
    */
-  private estimateTokens(text: string): number {
+  estimateTokens(text: string): number {
     if (!text) return 0;
     const matches = text.match(TOKEN_REGEX);
     return matches ? matches.length : 0;

@@ -4,22 +4,23 @@ import type {
   EndTpsBehavior,
   TokenSpeedConfig,
 } from "@pi-token-speed/Interfaces/config-types";
-import { MAX_SLIDING_WINDOW, MIN_SLIDING_WINDOW } from "@pi-token-speed/constants";
 import {
   COLOR_BLAZING,
   COLOR_FAST,
   COLOR_MEDIUM,
   COLOR_SLOW,
-  COUNT_STRATEGY,
-  DISPLAY_MODE,
-  END_TPS_BEHAVIOR,
-  SLIDING_WINDOW,
+  DEFAULT_COUNT_STRATEGY,
+  DEFAULT_DISPLAY_MODE,
+  DEFAULT_END_TPS_BEHAVIOR,
+  DEFAULT_SLIDING_WINDOW,
+  DEFAULT_USE_PROVIDER_TOKENS,
+  MAX_SLIDING_WINDOW,
+  MIN_SLIDING_WINDOW,
   TPS_THRESHOLD_BLAZING,
   TPS_THRESHOLD_FAST,
   TPS_THRESHOLD_MEDIUM,
   TPS_THRESHOLD_SLOW,
-  USE_PROVIDER_TOKENS,
-} from "../Config/defaults";
+} from "@pi-token-speed/constants";
 import {
   COUNT_STRATEGY_LABELS,
   DISPLAY_LABELS,
@@ -27,7 +28,9 @@ import {
 } from "@pi-token-speed/Config/options";
 
 /**
- * Static utility class for TokenSpeed configuration validation.
+ * Configuration validator for TokenSpeed.
+ *
+ * Instance-based design for testability and dependency injection.
  */
 export class Validator {
   /**
@@ -36,7 +39,7 @@ export class Validator {
    * @param config The configuration to validate
    * @returns The corrected configuration and a list of error messages
    */
-  static validate(config: TokenSpeedConfig): {
+  validate(config: TokenSpeedConfig): {
     config: TokenSpeedConfig;
     errors: string[];
   } {
@@ -88,7 +91,7 @@ export class Validator {
    * @param s The string to validate
    * @returns True if the string is a valid hex color; false otherwise
    */
-  static isValidHex(s: string): boolean {
+  isValidHex(s: string): boolean {
     return /^#[0-9a-fA-F]{6}$/.test(s);
   }
 
@@ -99,7 +102,7 @@ export class Validator {
    * @param config The configuration to validate
    * @returns An object with validity status and optional error messages
    */
-  private static isValidThresholdOrder(config: TokenSpeedConfig): {
+  public isValidThresholdOrder(config: TokenSpeedConfig): {
     valid: boolean;
     errors?: string[];
   } {
@@ -128,7 +131,7 @@ export class Validator {
    * @param config The configuration to validate
    * @returns An object with validity status and optional error messages
    */
-  private static isValidColorDefinition(config: TokenSpeedConfig): {
+  public isValidColorDefinition(config: TokenSpeedConfig): {
     valid: boolean;
     errors?: string[];
   } {
@@ -139,13 +142,13 @@ export class Validator {
       colorBlazing = COLOR_BLAZING,
     } = config;
     const errors: string[] = [];
-    if (!Validator.isValidHex(colorSlow))
+    if (!this.isValidHex(colorSlow))
       errors.push(`  - Invalid colorSlow: ${colorSlow}`);
-    if (!Validator.isValidHex(colorMedium))
+    if (!this.isValidHex(colorMedium))
       errors.push(`  - Invalid colorMedium: ${colorMedium}`);
-    if (!Validator.isValidHex(colorFast))
+    if (!this.isValidHex(colorFast))
       errors.push(`  - Invalid colorFast: ${colorFast}`);
-    if (!Validator.isValidHex(colorBlazing))
+    if (!this.isValidHex(colorBlazing))
       errors.push(`  - Invalid colorBlazing: ${colorBlazing}`);
     return { valid: errors.length === 0, errors };
   }
@@ -157,7 +160,7 @@ export class Validator {
    * @param errors The shared errors array to push to if invalid.
    * @returns The validated (or defaulted) display mode.
    */
-  private static checkDisplayMode(
+  public checkDisplayMode(
     value: string,
     errors: string[],
   ): DisplayMode {
@@ -165,10 +168,10 @@ export class Validator {
       return value as DisplayMode;
 
     errors.push(
-      `- Invalid display "${value}" — defaulting to "${DISPLAY_MODE}".`,
+      `- Invalid display "${value}" — defaulting to "${DEFAULT_DISPLAY_MODE}".`,
     );
 
-    return DISPLAY_MODE;
+    return DEFAULT_DISPLAY_MODE;
   }
 
   /**
@@ -178,7 +181,7 @@ export class Validator {
    * @param errors The shared errors array to push to if invalid.
    * @returns The validated (or defaulted) count strategy.
    */
-  private static checkCountStrategy(
+  public checkCountStrategy(
     value: string,
     errors: string[],
   ): CountStrategy {
@@ -186,10 +189,10 @@ export class Validator {
       return value as CountStrategy;
 
     errors.push(
-      `- Invalid countStrategy "${value}" — defaulting to "${COUNT_STRATEGY}".`,
+      `- Invalid countStrategy "${value}" — defaulting to "${DEFAULT_COUNT_STRATEGY}".`,
     );
 
-    return COUNT_STRATEGY;
+    return DEFAULT_COUNT_STRATEGY;
   }
 
   /**
@@ -199,17 +202,17 @@ export class Validator {
    * @param errors The shared errors array to push to if invalid.
    * @returns The validated (or defaulted) boolean value.
    */
-  private static checkUseProviderTokens(
+  public checkUseProviderTokens(
     value: unknown,
     errors: string[],
   ): boolean {
     if (typeof value === "boolean") return value;
 
     errors.push(
-      `- Invalid useProviderTokens (expected boolean) — defaulting to ${USE_PROVIDER_TOKENS}.`,
+      `- Invalid useProviderTokens (expected boolean) — defaulting to ${DEFAULT_USE_PROVIDER_TOKENS}.`,
     );
 
-    return USE_PROVIDER_TOKENS;
+    return DEFAULT_USE_PROVIDER_TOKENS;
   }
 
   /**
@@ -220,7 +223,7 @@ export class Validator {
    * @param errors The shared errors array to push to if invalid.
    * @returns The validated (or defaulted) sliding window value.
    */
-  private static checkSlidingWindow(value: unknown, errors: string[]): number {
+  public checkSlidingWindow(value: unknown, errors: string[]): number {
     if (
       typeof value === "number" &&
       value >= MIN_SLIDING_WINDOW &&
@@ -229,10 +232,10 @@ export class Validator {
       return value;
 
     errors.push(
-      `- Invalid slidingWindow "${value}" — defaulting to ${SLIDING_WINDOW}.`,
+      `- Invalid slidingWindow "${value}" — defaulting to ${DEFAULT_SLIDING_WINDOW}.`,
     );
 
-    return SLIDING_WINDOW;
+    return DEFAULT_SLIDING_WINDOW;
   }
 
   /**
@@ -242,7 +245,7 @@ export class Validator {
    * @param errors The shared errors array to push to if invalid.
    * @returns The validated (or defaulted) end TPS behavior.
    */
-  private static checkEndTpsBehavior(
+  public checkEndTpsBehavior(
     value: unknown,
     errors: string[],
   ): EndTpsBehavior {
@@ -250,9 +253,9 @@ export class Validator {
       return value as EndTpsBehavior;
 
     errors.push(
-      `- Invalid endTpsBehavior "${value}" — defaulting to "${END_TPS_BEHAVIOR}".`,
+      `- Invalid endTpsBehavior "${value}" — defaulting to "${DEFAULT_END_TPS_BEHAVIOR}".`,
     );
 
-    return END_TPS_BEHAVIOR;
+    return DEFAULT_END_TPS_BEHAVIOR;
   }
 }

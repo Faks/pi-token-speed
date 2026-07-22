@@ -8,10 +8,10 @@ import { COMPACTION_THRESHOLD, MIN_SLIDING_WINDOW } from "@pi-token-speed/consta
  * prevent unbounded memory growth.
  */
 export class SlidingWindow {
-  private readonly events: { time: number; tokens: number }[] = [];
-  private windowStartIndex = 0;
+  public readonly events: { time: number; tokens: number }[] = [];
+  public windowStartIndex = 0;
 
-  constructor(private readonly windowMs: number) {}
+  constructor(public readonly windowMs: number) {}
 
   /**
    * Records a batch of tokens with the current timestamp.
@@ -70,7 +70,7 @@ export class SlidingWindow {
    * Removes the dead prefix of the events array to free memory.
    * Called periodically when `windowStartIndex` reaches the compaction threshold.
    */
-  private compact(): void {
+  public compact(): void {
     if (this.windowStartIndex === 0) return;
     this.events.splice(0, this.windowStartIndex);
     this.windowStartIndex = 0;

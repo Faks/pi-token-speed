@@ -3,12 +3,19 @@ import { TokenSpeedEngine } from "../src/Core/engine";
 
 vi.useFakeTimers();
 
+const MOCK_CONFIG = {
+  slidingWindow: 1000,
+  countStrategy: "direct" as const,
+  useProviderTokens: false,
+  endTpsBehavior: "average" as const,
+};
+
 describe("TokenSpeedEngine", () => {
   let engine: TokenSpeedEngine;
 
   beforeEach(() => {
     engine = new TokenSpeedEngine();
-    engine.initialize();
+    engine.initialize(MOCK_CONFIG);
   });
 
   describe("start / stop", () => {
@@ -145,7 +152,7 @@ describe("TokenSpeedEngine", () => {
 
   describe("TPS", () => {
     it("returns 0 before start", () => {
-      expect(engine.tps).toBe(0);
+      expect(engine.tpsFinal).toBe(0);
     });
 
     it("returns tpsAvg after streaming stops", () => {
@@ -156,7 +163,7 @@ describe("TokenSpeedEngine", () => {
       engine.recordDelta("world");
       vi.setSystemTime(now + 2000);
       engine.stop();
-      expect(engine.tps).toBeCloseTo(1, 0);
+      expect(engine.tpsFinal).toBeCloseTo(1, 0);
     });
   });
 
@@ -168,9 +175,9 @@ describe("TokenSpeedEngine", () => {
       vi.setSystemTime(now + 1000);
       engine.pause();
       vi.setSystemTime(now + 2000);
-      // _pausedMs is only updated when resume() is called (via recordDelta)
-      // Before resume, elapsedMs = Date.now() - _startTime - 0 = 2000
-      engine.recordDelta("hello"); // triggers resume, _pausedMs = 1000
+      // pausedMs is only updated when resume() is called (via recordDelta)
+      // Before resume, elapsedMs = Date.now() - startTime - 0 = 2000
+      engine.recordDelta("hello"); // triggers resume, pausedMs = 1000
       vi.setSystemTime(now + 3000);
       // 3000 - 0 - 1000 = 2000ms (excludes 1000ms pause)
       expect(engine.elapsedMs).toBe(2000);
