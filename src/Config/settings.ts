@@ -2,9 +2,9 @@ import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import type { TokenSpeedConfig } from "../Interfaces/config-types";
-import { STATUS_KEY } from "../constants";
-import {
+import type  { TokenSpeedConfig } from "@pi-token-speed/Interfaces/config-types";
+import  { STATUS_KEY } from "@pi-token-speed/constants";
+import  {
   COLOR_BLAZING,
   COLOR_FAST,
   COLOR_MEDIUM,
@@ -18,8 +18,8 @@ import {
   TPS_THRESHOLD_FAST,
   TPS_THRESHOLD_MEDIUM,
   TPS_THRESHOLD_SLOW,
-} from "../constants";
-import { Validator } from "../Commands/validation";
+} from "@pi-token-speed/constants";
+import  { Validator } from "@pi-token-speed/Commands/validation";
 
 /**
  * Manages TokenSpeed configuration: defaults, user settings, caching,

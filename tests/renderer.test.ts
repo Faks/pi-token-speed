@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TokenSpeedEngine } from "../src/Core/engine";
-import { Renderer } from "../src/UI/renderer";
-import { settings } from "../src/Config/settings";
-import { isValidHex } from "../src/constants";
+import  { TokenSpeedEngine } from "@pi-token-speed/Core/engine";
+import  { Renderer } from "@pi-token-speed/UI/renderer";
+import  { settings } from "@pi-token-speed/Config/settings";
+import  { isValidHex } from "@pi-token-speed/constants";
 
 const MOCK_CONFIG = {
   tpsSlow: 0,

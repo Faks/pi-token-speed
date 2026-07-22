@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Validator } from "../src/Commands/validation";
-import { isValidHex } from "../src/constants";
+import  { Validator } from "@pi-token-speed/Commands/validation";
+import  { isValidHex } from "@pi-token-speed/constants";
 
 describe("Validator", () => {
   describe("isValidHex", () => {

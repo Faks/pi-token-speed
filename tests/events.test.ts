@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TokenSpeedEngine } from "../src/Core/engine";
-import { Renderer } from "../src/UI/renderer";
-import { EventManager } from "../src/Core/events";
+import  { TokenSpeedEngine } from "@pi-token-speed/Core/engine";
+import  { Renderer } from "@pi-token-speed/UI/renderer";
+import  { EventManager } from "@pi-token-speed/Core/events";
 
 // Mock settings — config defined inside factory to avoid hoisting issues
 vi.mock("../src/Config/settings", () => {

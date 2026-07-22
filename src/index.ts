@@ -1,3 +1,23 @@
+/**
+ * Runtime bootstrap: register tsconfig-paths so Node.js can resolve
+ * `@pi-token-speed/*` aliases before any project imports are loaded.
+ *
+ * Because tsconfig.json uses "module": "commonjs", TypeScript compiles
+ * these top-to-bottom `import` statements into sequential `require()`
+ * calls — the register() call runs before the first aliased import.
+ */
+import { register } from "tsconfig-paths";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+register({
+  baseUrl: __dirname,
+  paths: {
+    "@pi-token-speed/*": ["./src/*"],
+  },
+});
+
 import type {
   AgentEndEvent,
   ExtensionAPI,
@@ -5,10 +25,10 @@ import type {
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 
-import { CommandManager } from "./Commands/commands";
-import { TokenSpeedEngine } from "./Core/engine";
-import { EventManager } from "./Core/events";
-import { Renderer } from "./UI/renderer";
+import { CommandManager } from "@pi-token-speed/Commands/commands";
+import { TokenSpeedEngine } from "@pi-token-speed/Core/engine";
+import { EventManager } from "@pi-token-speed/Core/events";
+import { Renderer } from "@pi-token-speed/UI/renderer";
 
 export default async (pi: ExtensionAPI) => {
   const engine = new TokenSpeedEngine();

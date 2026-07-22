@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TokenSpeedEngine } from "../src/Core/engine";
+import  { TokenSpeedEngine } from "@pi-token-speed/Core/engine";
 
 const MOCK_CONFIG = {
   slidingWindow: 1000,

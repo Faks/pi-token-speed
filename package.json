@@ -41,6 +41,7 @@
   "devDependencies": {
     "@types/node": "^26.1.1",
     "prettier-plugin-organize-imports": "^4.3.0",
+    "tsconfig-paths": "^4.2.0",
     "vitest": "^4.1.10"
   }
 }

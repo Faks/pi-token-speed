@@ -1,10 +1,10 @@
-import type {
+import type  {
   CountStrategy,
   DisplayMode,
   EndTpsBehavior,
   TokenSpeedConfig,
-} from "../Interfaces/config-types";
-import {
+} from "@pi-token-speed/Interfaces/config-types";
+import  {
   COLOR_BLAZING,
   COLOR_FAST,
   COLOR_MEDIUM,
@@ -20,12 +20,12 @@ import {
   TPS_THRESHOLD_FAST,
   TPS_THRESHOLD_MEDIUM,
   TPS_THRESHOLD_SLOW,
-} from "../constants";
-import {
+} from "@pi-token-speed/constants";
+import  {
   COUNT_STRATEGY_LABELS,
   DISPLAY_LABELS,
   END_TPS_BEHAVIOR_LABELS,
-} from "../Config/options";
+} from "@pi-token-speed/Config/options";
 
 /**
  * Configuration validator for TokenSpeed.

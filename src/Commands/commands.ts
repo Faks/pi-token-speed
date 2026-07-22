@@ -1,21 +1,21 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { getSettingsListTheme } from "@earendil-works/pi-coding-agent";
 import { SettingsList, type SettingItem } from "@earendil-works/pi-tui";
-import type {
+import type  {
   CountStrategy,
   DisplayMode,
   EndTpsBehavior,
   TokenSpeedConfig,
-} from "../Interfaces/config-types";
-import { TokenSpeedEngine } from "../Core/engine";
-import {
+} from "@pi-token-speed/Interfaces/config-types";
+import  { TokenSpeedEngine } from "@pi-token-speed/Core/engine";
+import  {
   COUNT_STRATEGY_LABELS,
   DISPLAY_LABELS,
   END_TPS_BEHAVIOR_LABELS,
   TOGGLE_LABELS,
-} from "../Config/options";
-import type { Renderer } from "../UI/renderer";
-import { settings } from "../Config/settings";
+} from "@pi-token-speed/Config/options";
+import type  { Renderer } from "@pi-token-speed/UI/renderer";
+import  { settings } from "@pi-token-speed/Config/settings";
 
 /**
  * Configuration options
