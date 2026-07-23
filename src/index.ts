@@ -11,7 +11,7 @@ import { TokenSpeedEngine } from './Core/engine.js'
 import { EventManager } from './Core/events.js'
 import { Renderer } from './UI/renderer.js'
 
-export async function register(pi: ExtensionAPI): Promise<void> {
+export default async function register(pi: ExtensionAPI): Promise<void> {
   const engine = new TokenSpeedEngine()
   const renderer = new Renderer(engine)
   const commands = new CommandManager(renderer, engine)
