@@ -1,22 +1,11 @@
 /**
- * Runtime bootstrap: register tsconfig-paths so Node.js can resolve
- * `@pi-token-speed/*` aliases before any project imports are loaded.
+ * Bootstrap: register path-alias resolver before any aliased imports.
  *
- * Because tsconfig.json uses "module": "commonjs", TypeScript compiles
- * these top-to-bottom `import` statements into sequential `require()`
- * calls — the register() call runs before the first aliased import.
+ * TypeScript compiles top-to-bottom `import` statements into sequential
+ * `require()` calls, so the bootstrap hook is active before the first
+ * `@pi-token-speed/*` import is resolved.
  */
-import { register } from "tsconfig-paths";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-register({
-  baseUrl: __dirname,
-  paths: {
-    "@pi-token-speed/*": ["./src/*"],
-  },
-});
+import "./bootstrap";
 
 import type {
   AgentEndEvent,
