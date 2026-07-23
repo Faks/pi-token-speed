@@ -7,8 +7,7 @@
     "test:integration": "npx tsx tests/integration-runner.ts",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "check": "biome check --write .",
-    "prepare": "husky"
+    "check": "biome check --write ."
   },
   "keywords": [
     "pi",
