@@ -4,7 +4,11 @@
   "description": "Pi extension to measure tokens per second via sliding window.",
   "scripts": {
     "test": "vitest run",
-    "test:integration": "tsx tests/bootstrap.integration.ts"
+    "test:integration": "npx tsx tests/integration-runner.ts",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "check": "biome check --write .",
+    "prepare": "husky"
   },
   "keywords": [
     "pi",
@@ -27,11 +31,6 @@
       "./src/index.ts"
     ]
   },
-  "prettier": {
-    "plugins": [
-      "prettier-plugin-organize-imports"
-    ]
-  },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
@@ -40,8 +39,16 @@
     "protobufjs": "7.6.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.5",
     "@types/node": "^26.1.1",
-    "prettier-plugin-organize-imports": "^4.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.2.0",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx}": [
+      "npx @biomejs/biome check --staged --write"
+    ]
   }
 }

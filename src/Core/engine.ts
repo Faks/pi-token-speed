@@ -1,7 +1,6 @@
-import type  { CountStrategy, EndTpsBehavior } from "@pi-token-speed/Interfaces/config-types";
-import  { SlidingWindow } from "@pi-token-speed/Core/sliding-window";
-
-const TOKEN_REGEX = /\w+|[^\s\w]/g;
+import { MS_PER_SECOND, TOKEN_REGEX } from '../Config/app.js'
+import type { CountStrategy, EndTpsBehavior } from '../Contracts/config-types.js'
+import { SlidingWindow } from './sliding-window.js'
 
 /**
  * Core engine that tracks token speed metrics during streaming.
@@ -9,41 +8,41 @@ const TOKEN_REGEX = /\w+|[^\s\w]/g;
  * State is managed via public fields for testability.
  */
 export class TokenSpeedEngine {
-  isStreaming = false;
-  isPaused = false;
+  isStreaming = false
+  isPaused = false
 
-  tokenCount = 0;
-  startTime = 0;
-  endTime = 0;
+  tokenCount = 0
+  startTime = 0
+  endTime = 0
 
-  ttftStart = 0;
-  ttftEnd = 0;
+  ttftStart = 0
+  ttftEnd = 0
 
-  startPause = 0;
-  pausedMs = 0;
+  startPause = 0
+  pausedMs = 0
 
-  tps = 0;
-  countedUsageOutput = 0;
+  tps = 0
+  countedUsageOutput = 0
 
-  slidingWindow!: SlidingWindow;
-  useProviderTokens!: boolean;
-  countStrategy!: CountStrategy;
-  endTpsBehavior!: EndTpsBehavior;
+  slidingWindow!: SlidingWindow
+  useProviderTokens!: boolean
+  countStrategy!: CountStrategy
+  endTpsBehavior!: EndTpsBehavior
 
   /**
    * Loads configuration.
    * Must be called after `settings.initialize()`.
    */
   initialize(config: {
-    slidingWindow: number;
-    countStrategy: CountStrategy;
-    useProviderTokens: boolean;
-    endTpsBehavior: EndTpsBehavior;
+    slidingWindow: number
+    countStrategy: CountStrategy
+    useProviderTokens: boolean
+    endTpsBehavior: EndTpsBehavior
   }): void {
-    this.slidingWindow = new SlidingWindow(config.slidingWindow);
-    this.countStrategy = config.countStrategy;
-    this.useProviderTokens = config.useProviderTokens;
-    this.endTpsBehavior = config.endTpsBehavior;
+    this.slidingWindow = new SlidingWindow(config.slidingWindow)
+    this.countStrategy = config.countStrategy
+    this.useProviderTokens = config.useProviderTokens
+    this.endTpsBehavior = config.endTpsBehavior
   }
 
   /**
@@ -60,25 +59,27 @@ export class TokenSpeedEngine {
    * @param usageOutput Provider-reported cumulative output-token count (optional).
    */
   recordDelta(delta: string, usageOutput?: number): void {
-    if (!this.isStreaming) return;
-    if (this.isPaused) this.resume();
+    if (!this.isStreaming) {
+      return
+    }
+    if (this.isPaused) {
+      this.resume()
+    }
 
     const shouldUseProviderTokens =
-      this.useProviderTokens &&
-      usageOutput !== undefined &&
-      usageOutput > this.countedUsageOutput;
+      this.useProviderTokens && usageOutput !== undefined && usageOutput > this.countedUsageOutput
 
     if (shouldUseProviderTokens) {
-      this.recordTokens(usageOutput - this.countedUsageOutput);
-      this.countedUsageOutput = usageOutput;
-      return;
+      this.recordTokens(usageOutput - this.countedUsageOutput)
+      this.countedUsageOutput = usageOutput
+      return
     }
 
     // Fallback: estimate or direct counting
-    if (this.countStrategy === "estimate") {
-      this.recordTokens(this.estimateTokens(delta));
+    if (this.countStrategy === 'estimate') {
+      this.recordTokens(this.estimateTokens(delta))
     } else {
-      this.recordTokens(1);
+      this.recordTokens(1)
     }
   }
 
@@ -88,21 +89,27 @@ export class TokenSpeedEngine {
    * @param tokens The authoritative token count from the message end event.
    */
   reconcileTotal(tokens: number): void {
-    if (tokens > 0) this.tokenCount = tokens;
+    if (tokens > 0) {
+      this.tokenCount = tokens
+    }
   }
 
   /**
    * Returns elapsed milliseconds since stream start (0 if not started)
    */
   get elapsedMs(): number {
-    if (this.startTime === 0) return 0;
-    if (this.isStreaming) return Date.now() - this.startTime - this.pausedMs;
-    return this.endTime - this.startTime - this.pausedMs;
+    if (this.startTime === 0) {
+      return 0
+    }
+    if (this.isStreaming) {
+      return Date.now() - this.startTime - this.pausedMs
+    }
+    return this.endTime - this.startTime - this.pausedMs
   }
 
   /** Returns elapsed seconds since stream start (0 if not started). */
   get elapsedSeconds(): number {
-    return this.elapsedMs / 1000;
+    return this.elapsedMs / MS_PER_SECOND
   }
 
   /**
@@ -112,9 +119,13 @@ export class TokenSpeedEngine {
    * - `"last"`: returns the last sliding window measurement.
    */
   get tpsFinal(): number {
-    if (this.isStreaming) return this.tps;
-    if (this.endTpsBehavior === "last") return this.tps;
-    return this.tpsAvg;
+    if (this.isStreaming) {
+      return this.tps
+    }
+    if (this.endTpsBehavior === 'last') {
+      return this.tps
+    }
+    return this.tpsAvg
   }
 
   /**
@@ -122,57 +133,63 @@ export class TokenSpeedEngine {
    * Computed as total tokens / elapsed seconds. Returns 0 if no time has elapsed.
    */
   get tpsAvg(): number {
-    if (this.elapsedSeconds <= 0) return 0;
-    return this.tokenCount / this.elapsedSeconds;
+    if (this.elapsedSeconds <= 0) {
+      return 0
+    }
+    return this.tokenCount / this.elapsedSeconds
   }
 
   /**
    * Returns time to first token in milliseconds
    */
   get ttft(): number {
-    return Math.max(this.ttftEnd - this.ttftStart, 0);
+    return Math.max(this.ttftEnd - this.ttftStart, 0)
   }
 
   /**
    * Starts a new streaming session.
    */
   start(): void {
-    if (this.isStreaming) return;
+    if (this.isStreaming) {
+      return
+    }
 
-    this.tokenCount = 0;
-    this.isStreaming = true;
-    this.startTime = Date.now();
-    this.endTime = Date.now();
-    this.slidingWindow.reset();
-    this.countedUsageOutput = 0;
-    this.tps = 0;
-    this.pausedMs = 0;
+    this.tokenCount = 0
+    this.isStreaming = true
+    this.startTime = Date.now()
+    this.endTime = Date.now()
+    this.slidingWindow.reset()
+    this.countedUsageOutput = 0
+    this.tps = 0
+    this.pausedMs = 0
   }
 
   /**
-   * Records the start timestamp for TTFT measurement.
+   * Records the start timestamp for time-to-first-token measurement.
    */
-  startTTFT(): void {
-    this.ttftStart = Date.now();
-    this.ttftEnd = 0;
+  startTtft(): void {
+    this.ttftStart = Date.now()
+    this.ttftEnd = 0
   }
 
   /**
-   * Records the end timestamp for TTFT measurement.
+   * Records the end timestamp for time-to-first-token measurement.
    * Only captures once per stream (guarded by ttftEnd).
    */
-  stopTTFT(): void {
-    if (this.ttftEnd !== 0) return;
-    this.ttftEnd = Date.now();
+  stopTtft(): void {
+    if (this.ttftEnd !== 0) {
+      return
+    }
+    this.ttftEnd = Date.now()
   }
 
   /**
    * Stops streaming.
    */
   stop(): void {
-    this.isStreaming = false;
-    this.endTime = Date.now();
-    this.slidingWindow.reset();
+    this.isStreaming = false
+    this.endTime = Date.now()
+    this.slidingWindow.reset()
   }
 
   /**
@@ -180,16 +197,16 @@ export class TokenSpeedEngine {
    * The next `recordDelta` will call `resume()`.
    */
   pause(): void {
-    this.isPaused = true;
-    this.startPause = Date.now();
+    this.isPaused = true
+    this.startPause = Date.now()
   }
 
   /**
    * Resumes the timer, updating the paused time.
    */
   resume(): void {
-    this.isPaused = false;
-    this.pausedMs += Date.now() - this.startPause;
+    this.isPaused = false
+    this.pausedMs += Date.now() - this.startPause
   }
 
   /**
@@ -198,11 +215,13 @@ export class TokenSpeedEngine {
    * @param tokens The number of tokens to record.
    */
   recordTokens(tokens: number): void {
-    if (!this.isStreaming || tokens <= 0) return;
+    if (!this.isStreaming || tokens <= 0) {
+      return
+    }
 
-    this.tokenCount += tokens;
-    this.slidingWindow.record(tokens);
-    this.tps = this.slidingWindow.getTps(Date.now());
+    this.tokenCount += tokens
+    this.slidingWindow.record(tokens)
+    this.tps = this.slidingWindow.getTps(Date.now())
   }
 
   /**
@@ -213,8 +232,13 @@ export class TokenSpeedEngine {
    * @returns The estimated number of tokens.
    */
   estimateTokens(text: string): number {
-    if (!text) return 0;
-    const matches = text.match(TOKEN_REGEX);
-    return matches ? matches.length : 0;
+    if (!text) {
+      return 0
+    }
+    const matches = text.match(TOKEN_REGEX)
+    if (matches) {
+      return matches.length
+    }
+    return 0
   }
 }

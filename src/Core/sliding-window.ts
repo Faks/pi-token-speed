@@ -1,4 +1,4 @@
-import  { COMPACTION_THRESHOLD, MIN_SLIDING_WINDOW } from "@pi-token-speed/constants";
+import { COMPACTION_THRESHOLD, MS_PER_SECOND, SlidingWindow as SlidingWindowConfig } from '../Config/app.js'
 
 /**
  * Time-based sliding window for calculating tokens-per-second.
@@ -8,11 +8,14 @@ import  { COMPACTION_THRESHOLD, MIN_SLIDING_WINDOW } from "@pi-token-speed/const
  * prevent unbounded memory growth.
  */
 export class SlidingWindow {
-  public readonly events: { time: number; tokens: number }[] = [];
-  public windowStartIndex = 0;
-  private runningSum = 0;
+  readonly events: { time: number; tokens: number }[] = []
+  windowStartIndex = 0
+  runningSum = 0
+  readonly windowMs: number
 
-  constructor(public readonly windowMs: number) {}
+  constructor(windowMs: number) {
+    this.windowMs = windowMs
+  }
 
   /**
    * Records a batch of tokens with the current timestamp.
@@ -21,11 +24,11 @@ export class SlidingWindow {
    * @param tokens The number of tokens to record.
    */
   record(tokens: number): void {
-    this.events.push({ time: Date.now(), tokens });
-    this.runningSum += tokens;
+    this.events.push({ time: Date.now(), tokens })
+    this.runningSum += tokens
 
     if (this.windowStartIndex >= COMPACTION_THRESHOLD) {
-      this.compact();
+      this.compact()
     }
   }
 
@@ -40,49 +43,52 @@ export class SlidingWindow {
    * @returns Tokens per second, or 0 if the window is empty.
    */
   getTps(now: number): number {
-    if (this.events.length === 0) return 0;
+    if (this.events.length === 0) {
+      return 0
+    }
 
-    const windowStart = now - this.windowMs;
+    const windowStart = now - this.windowMs
 
     // Advance past events older than the window
-    while (
-      this.windowStartIndex < this.events.length &&
-      this.events[this.windowStartIndex].time < windowStart
-    ) {
-      this.runningSum -= this.events[this.windowStartIndex].tokens;
-      this.windowStartIndex++;
+    while (this.windowStartIndex < this.events.length && this.events[this.windowStartIndex].time < windowStart) {
+      this.runningSum -= this.events[this.windowStartIndex].tokens
+      this.windowStartIndex += 1
     }
 
     if (this.windowStartIndex >= this.events.length) {
-      this.runningSum = 0;
-      return 0;
+      this.runningSum = 0
+      return 0
     }
 
-    if (this.runningSum === 0) return 0;
+    if (this.runningSum === 0) {
+      return 0
+    }
 
     // Use the actual span but clamp to a minimum to avoid burst spikes.
-    const rawSpan = now - this.events[this.windowStartIndex].time;
-    const span = Math.max(rawSpan, MIN_SLIDING_WINDOW);
-    return (1000 * this.runningSum) / span;
+    const rawSpan = now - this.events[this.windowStartIndex].time
+    const span = Math.max(rawSpan, SlidingWindowConfig.Min)
+    return (MS_PER_SECOND * this.runningSum) / span
   }
 
   /**
    * Removes the dead prefix of the events array to free memory.
    * Called periodically when `windowStartIndex` reaches the compaction threshold.
    */
-  public compact(): void {
-    if (this.windowStartIndex === 0) return;
-    this.runningSum = 0;
-    this.events.splice(0, this.windowStartIndex);
-    this.windowStartIndex = 0;
+  compact(): void {
+    if (this.windowStartIndex === 0) {
+      return
+    }
+    this.runningSum = 0
+    this.events.splice(0, this.windowStartIndex)
+    this.windowStartIndex = 0
   }
 
   /**
    * Resets the window, discarding all recorded events.
    */
   reset(): void {
-    this.events.length = 0;
-    this.windowStartIndex = 0;
-    this.runningSum = 0;
+    this.events.length = 0
+    this.windowStartIndex = 0
+    this.runningSum = 0
   }
 }

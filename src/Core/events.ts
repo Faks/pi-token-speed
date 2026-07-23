@@ -1,37 +1,21 @@
-import type {
-  AgentEndEvent,
-  ExtensionContext,
-} from "@earendil-works/pi-coding-agent";
-import  { TOKEN_GENERATION_TOOLS } from "@pi-token-speed/constants";
-import  { TokenSpeedEngine } from "@pi-token-speed/Core/engine";
-import  { Renderer } from "@pi-token-speed/UI/renderer";
-import  { settings } from "@pi-token-speed/Config/settings";
-
-interface ToolCall {
-  type: string;
-  name?: string;
-}
-
-interface MessageUpdatePayload {
-  assistantMessageEvent: {
-    type: string;
-    delta?: string;
-    partial?: {
-      content?: ToolCall[];
-      usage?: { output?: number };
-    };
-    contentIndex?: number;
-  };
-}
+import type { AgentEndEvent, ExtensionContext } from '@earendil-works/pi-coding-agent'
+import { TOKEN_GENERATION_TOOLS } from '../Config/app.js'
+import { settings } from '../Config/settings.js'
+import type { MessageUpdatePayload, ToolCall } from '../Contracts/config-types.js'
+import type { Renderer } from '../UI/renderer.js'
+import type { TokenSpeedEngine } from './engine.js'
 
 /**
  * Manages all Pi event subscriptions for the token-speed extension.
  */
 export class EventManager {
-  constructor(
-    public readonly engine: TokenSpeedEngine,
-    public readonly renderer: Renderer,
-  ) {}
+  readonly engine: TokenSpeedEngine
+  readonly renderer: Renderer
+
+  constructor(engine: TokenSpeedEngine, renderer: Renderer) {
+    this.engine = engine
+    this.renderer = renderer
+  }
 
   /**
    * Initializes the engine and renderer for a new session.
@@ -39,23 +23,23 @@ export class EventManager {
    * @param ctx The Pi extension context.
    */
   async handleSessionStart(ctx: ExtensionContext): Promise<void> {
-    const config = await settings.initialize();
-    const errors = settings.errors;
+    const config = await settings.initialize()
+    const { errors } = settings
 
     if (errors.length > 0) {
-      const message = ["[pi-token-speed]", ...errors].join("\n");
-      ctx.ui.notify(message, "warning");
+      const message = ['[pi-token-speed]', ...errors].join('\n')
+      ctx.ui.notify(message, 'warning')
     }
 
-    this.engine.initialize(config);
-    this.renderer.initialize(ctx);
+    this.engine.initialize(config)
+    this.renderer.initialize(ctx)
   }
 
   /**
    * Stops the engine when the session shuts down.
    */
   handleSessionShutdown(): void {
-    this.engine.stop();
+    this.engine.stop()
   }
 
   /**
@@ -64,8 +48,8 @@ export class EventManager {
    * @param event The message_start event payload.
    */
   handleMessageStart(event: { message?: { role?: string } }): void {
-    if (event.message?.role === "user") {
-      this.engine.startTTFT();
+    if (event.message?.role === 'user') {
+      this.engine.startTtft()
     }
   }
 
@@ -75,47 +59,93 @@ export class EventManager {
    * @param event The message_update event payload.
    * @param ctx The Pi extension context.
    */
-  handleMessageUpdate(
-    event: MessageUpdatePayload,
-    ctx: ExtensionContext,
-  ): void {
-    const ev = event.assistantMessageEvent;
+  handleMessageUpdate(event: MessageUpdatePayload, ctx: ExtensionContext): void {
+    const ev = event.assistantMessageEvent
 
-    if (
-      ev.type === "text_start" ||
-      ev.type === "thinking_start" ||
-      ev.type === "toolcall_start"
-    ) {
-      this.engine.stopTTFT();
-      this.engine.start();
-      return;
+    this.handleEventType(ev, ctx)
+  }
+
+  /**
+   * Handles a specific event type.
+   *
+   * @param ev The event payload.
+   * @param ctx The Pi extension context.
+   */
+  handleEventType(ev: MessageUpdatePayload['assistantMessageEvent'], ctx: ExtensionContext): void {
+    if (this.isStartEvent(ev.type)) {
+      this.engine.stopTtft()
+      this.engine.start()
+      return
     }
 
-    if (ev.type === "text_delta" || ev.type === "thinking_delta") {
-      this.engine.recordDelta(ev.delta ?? "", ev.partial?.usage?.output);
-      this.renderer.update(ctx);
-      return;
+    if (this.isDeltaEvent(ev.type)) {
+      this.engine.recordDelta(ev.delta ?? '', ev.partial?.usage?.output)
+      this.renderer.update(ctx)
+      return
     }
 
-    if (ev.type === "toolcall_delta") {
-      const toolCall = ev.partial?.content?.[ev.contentIndex ?? 0];
-      if (toolCall?.type !== "toolCall") return;
-
-      // Only edit/write tools are counted (token generation, relevant)
-      if (this.isTokenGenerationTool(toolCall)) {
-        this.engine.recordDelta(ev.delta ?? "", ev.partial?.usage?.output);
-        this.renderer.update(ctx);
-      }
+    if (ev.type === 'toolcall_delta') {
+      this.handleToolcallDelta(ev, ctx)
     }
 
-    if (ev.type === "toolcall_end") {
-      const toolCall = ev.partial?.content?.[ev.contentIndex ?? 0];
-      if (toolCall?.type !== "toolCall") return;
+    if (ev.type === 'toolcall_end') {
+      this.handleToolcallEnd(ev)
+    }
+  }
 
-      // Pause the timer for prompt processing tools, so they don't skew the average
-      if (this.isPromptProcessingTool(toolCall)) {
-        this.engine.pause();
-      }
+  /**
+   * Checks if the event type is a start event.
+   *
+   * @param type The event type.
+   * @returns True if it's a start event.
+   */
+  isStartEvent(type: string): boolean {
+    return type === 'text_start' || type === 'thinking_start' || type === 'toolcall_start'
+  }
+
+  /**
+   * Checks if the event type is a delta event.
+   *
+   * @param type The event type.
+   * @returns True if it's a delta event.
+   */
+  isDeltaEvent(type: string): boolean {
+    return type === 'text_delta' || type === 'thinking_delta'
+  }
+
+  /**
+   * Handles a toolcall delta event.
+   *
+   * @param ev The event payload.
+   * @param ctx The Pi extension context.
+   */
+  handleToolcallDelta(ev: MessageUpdatePayload['assistantMessageEvent'], ctx: ExtensionContext): void {
+    const toolCall = ev.partial?.content?.[ev.contentIndex ?? 0]
+    if (toolCall?.type !== 'toolCall') {
+      return
+    }
+
+    // Only edit/write tools are counted (token generation, relevant)
+    if (this.isTokenGenerationTool(toolCall)) {
+      this.engine.recordDelta(ev.delta ?? '', ev.partial?.usage?.output)
+      this.renderer.update(ctx)
+    }
+  }
+
+  /**
+   * Handles a toolcall end event.
+   *
+   * @param ev The event payload.
+   */
+  handleToolcallEnd(ev: MessageUpdatePayload['assistantMessageEvent']): void {
+    const toolCall = ev.partial?.content?.[ev.contentIndex ?? 0]
+    if (toolCall?.type !== 'toolCall') {
+      return
+    }
+
+    // Pause the timer for prompt processing tools, so they don't skew the average
+    if (this.isPromptProcessingTool(toolCall)) {
+      this.engine.pause()
     }
   }
 
@@ -126,15 +156,17 @@ export class EventManager {
    * @param ctx The Pi extension context.
    */
   handleAgentEnd(event: AgentEndEvent, ctx: ExtensionContext): void {
-    this.engine.stop();
+    this.engine.stop()
 
     const outputTokens = event.messages.reduce((acc, curr) => {
-      if ("usage" in curr && curr.usage?.output != null) return acc + curr.usage.output;
-      return acc;
-    }, 0);
+      if ('usage' in curr && curr.usage?.output !== null && curr.usage?.output !== undefined) {
+        return acc + curr.usage.output
+      }
+      return acc
+    }, 0)
 
-    this.engine.reconcileTotal(outputTokens);
-    this.renderer.update(ctx);
+    this.engine.reconcileTotal(outputTokens)
+    this.renderer.update(ctx)
   }
 
   /**
@@ -143,8 +175,8 @@ export class EventManager {
    * @param tool The tool used by Pi
    * @returns True if it's related to token generation
    */
-  public isTokenGenerationTool(tool?: ToolCall): boolean {
-    return TOKEN_GENERATION_TOOLS.has(tool?.name ?? "");
+  isTokenGenerationTool(tool?: ToolCall): boolean {
+    return TOKEN_GENERATION_TOOLS.has(tool?.name ?? '')
   }
 
   /**
@@ -153,7 +185,7 @@ export class EventManager {
    * @param tool The tool used by Pi
    * @returns True if it's related to prompt processing
    */
-  public isPromptProcessingTool(tool?: ToolCall): boolean {
-    return !this.isTokenGenerationTool(tool);
+  isPromptProcessingTool(tool?: ToolCall): boolean {
+    return !this.isTokenGenerationTool(tool)
   }
 }

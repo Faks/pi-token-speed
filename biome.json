@@ -1,0 +1,86 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.5/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": false
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "none",
+      "correctness": {
+        "noNodejsModules": "off",
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noConsole": "error"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "error",
+        "noUselessTernary": "error",
+        "noRedundantDefaultExport": "error"
+      },
+      "style": {
+        "noDefaultExport": "off",
+        "noNonNullAssertion": "error",
+        "useConst": "error",
+        "useTemplate": "error",
+        "useImportType": "error",
+        "useConsistentMemberAccessibility": "error",
+        "useNamingConvention": "off",
+        "useDestructuring": "error",
+        "useDefaultSwitchClause": "error",
+        "useNumericSeparators": "error",
+        "noParameterAssign": "error",
+        "noUselessElse": "error",
+        "noYodaExpression": "error",
+        "noNegationElse": "error",
+        "noNamespace": "error",
+        "noIncrementDecrement": "error",
+        "noMagicNumbers": "off",
+        "useCollapsedIf": "error",
+        "useLiteralEnumMembers": "error",
+        "useExponentiationOperator": "error",
+        "useSingleVarDeclarator": "error",
+        "useNodejsImportProtocol": "off",
+        "useExportsLast": "off"
+      },
+      "a11y": "error",
+      "security": "error",
+      "performance": {
+        "noDelete": "error",
+        "noAccumulatingSpread": "error"
+      },
+      "nursery": {
+        "noRestrictedDependencies": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "none"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  }
+}
