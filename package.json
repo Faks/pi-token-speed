@@ -3,7 +3,8 @@
   "version": "0.7.3",
   "description": "Pi extension to measure tokens per second via sliding window.",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "tsx tests/bootstrap.integration.ts"
   },
   "keywords": [
     "pi",

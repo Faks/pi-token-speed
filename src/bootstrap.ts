@@ -7,6 +7,7 @@
  * the extension from a git clone cache without `npm install`.
  */
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -14,59 +15,48 @@ const aliasPrefix = "@pi-token-speed/";
 const srcRoot = join(__dirname, "src");
 
 // Capture the original resolver before we patch it
-const originalResolve = (require as any).module._resolveFilename;
+// In Node.js, Module is accessible via require('module').Module
+// In some environments (like vitest), we need to handle this gracefully
+const Module = (require as any).module?.constructor || 
+               (require as any).main?.constructor;
 
-/**
- * Custom resolver: if the requested module starts with our alias prefix,
- * rewrite it to a filesystem path under src/.
- */
-function customResolve(
-  id: string,
-  parent: { filename?: string; paths?: string[] },
-  _options: any,
-  _factory: any
-) {
-  if (!id.startsWith(aliasPrefix)) {
-    return originalResolve(id, parent, _options, _factory);
-  }
+if (Module && Module._resolveFilename) {
+  const originalResolve = Module._resolveFilename;
 
-  // Strip the prefix and resolve relative to src/
-  const relative = id.slice(aliasPrefix.length);
-  const resolvedPath = join(srcRoot, relative);
+  /**
+   * Custom resolver: if the requested module starts with our alias prefix,
+   * rewrite it to a filesystem path under src/.
+   */
+  function customResolve(
+    id: string,
+    parent: { filename?: string; paths?: string[] },
+    _options: unknown,
+    _factory: unknown
+  ): string {
+    if (!id.startsWith(aliasPrefix)) {
+      return originalResolve(id, parent, _options, _factory);
+    }
 
-  // Try with .ts extension first, then fall back to original resolution
-  try {
-    const fs = __importStar(require("node:fs"));
-    const path = __importStar(require("node:path"));
+    // Strip the prefix and resolve relative to src/
+    const relative = id.slice(aliasPrefix.length);
+    const resolvedPath = join(srcRoot, relative);
 
     // Check if the resolved path exists with .ts extension
-    const tsPath = resolvedPath.endsWith(".ts")
-      ? resolvedPath
-      : resolvedPath + ".ts";
-
-    if (fs.existsSync(tsPath)) {
+    const tsPath = resolvedPath.endsWith(".ts") ? resolvedPath : resolvedPath + ".ts";
+    if (existsSync(tsPath)) {
       return tsPath;
     }
 
     // Try as directory/index.ts
     const indexPath = join(resolvedPath, "index.ts");
-    if (fs.existsSync(indexPath)) {
+    if (existsSync(indexPath)) {
       return indexPath;
     }
 
-    // Try original resolution for non-ts files
-    return originalResolve(id, parent, _options, _factory);
-  } catch {
+    // Fall back to original resolution for non-ts files
     return originalResolve(id, parent, _options, _factory);
   }
-}
 
-// Apply the patch
-(require as any).module._resolveFilename = customResolve;
-
-/**
- * Shorthand for __importStar to avoid TypeScript emitting helper functions.
- */
-function __importStar(mod: any): any {
-  return mod && mod.__esModule ? mod : { default: mod };
+  // Apply the patch
+  Module._resolveFilename = customResolve;
 }
